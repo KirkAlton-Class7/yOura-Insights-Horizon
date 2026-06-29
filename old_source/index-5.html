@@ -105,7 +105,7 @@
   .stagger-4 { animation-delay: 0.2s; opacity: 0; }
   .stagger-5 { animation-delay: 0.25s; opacity: 0; }
 
-  /* ── GLASS CARD BASE ── */
+  /* ── GLASS CARD ── */
   .glass {
     background: var(--surface);
     backdrop-filter: blur(12px);
@@ -123,7 +123,7 @@
     box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.1);
   }
 
-  /* Shimmer border glow on hover */
+  /* Shimmer border glow on hover (simulates gradient border) */
   .glass::before {
     content: '';
     position: absolute;
@@ -492,51 +492,7 @@
     opacity: 0.5;
   }
 
-  /* ── QUOTE CARD ── */
-  .quote-card {
-    margin-bottom: 24px;
-    position: relative;
-    z-index: 2;
-  }
-  .quote-card blockquote {
-    position: relative;
-    padding-left: 20px;
-    border-left: 3px solid var(--accent-cyan);
-  }
-  .quote-card .quote-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    justify-content: flex-end;
-  }
-  .quote-card .quote-actions button {
-    background: none;
-    border: none;
-    color: var(--text3);
-    cursor: pointer;
-    padding: 4px 10px;
-    border-radius: 6px;
-    transition: all 0.2s;
-    font-size: 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-family: 'Inter', sans-serif;
-  }
-  .quote-card .quote-actions button:hover {
-    color: var(--accent-cyan);
-    background: rgba(6,182,212,0.1);
-  }
-  .quote-card .quote-actions button.saved {
-    color: var(--optimal);
-  }
-  .quote-card .quote-attribution {
-    font-size: 0.85rem;
-    color: var(--text2);
-    margin-top: 4px;
-  }
-
-  /* ── SCORE SECTION ── */
+  /* Score section */
   .score-section {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -574,47 +530,6 @@
   .score-card.readiness::before { background: var(--readiness); }
   .score-card.sleep::before { background: var(--sleep); }
   .score-card.activity::before { background: var(--activity); }
-
-  /* Add glass effects to score cards too */
-  .score-card::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--gradient-main);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-    border-radius: 0 0 var(--radius) var(--radius);
-  }
-  .score-card:hover::after {
-    transform: scaleX(1);
-  }
-  .score-card .corner {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 48px;
-    height: 48px;
-    pointer-events: none;
-    opacity: 0.3;
-    transition: opacity 0.3s;
-  }
-  .score-card:hover .corner {
-    opacity: 0.6;
-  }
-  .score-card .corner::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to top left, rgba(255,255,255,0.05), transparent);
-    border-radius: 0 0 var(--radius) 0;
-  }
 
   .score-card-label {
     font-family: 'Outfit', sans-serif;
@@ -687,7 +602,7 @@
     opacity: 1;
   }
 
-  /* ── DETAIL CARDS ── */
+  /* Detail cards */
   .details-wrap {
     display: flex;
     flex-direction: column;
@@ -710,6 +625,7 @@
     transform: translateY(-2px);
     box-shadow: var(--shadow);
   }
+  /* Add glass::before/after effects to detail-card as well */
   .detail-card::before {
     content: '';
     position: absolute;
@@ -986,7 +902,45 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── FAVORITES MODAL ── */
+  /* ── QUOTE CARD ── */
+  .quote-card {
+    margin-top: 24px;
+    position: relative;
+    z-index: 2;
+  }
+  .quote-card blockquote {
+    position: relative;
+    padding-left: 20px;
+    border-left: 3px solid var(--accent-cyan);
+  }
+  .quote-card .quote-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: flex-end;
+  }
+  .quote-card .quote-actions button {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .quote-card .quote-actions button:hover {
+    color: var(--accent-cyan);
+    background: rgba(6,182,212,0.1);
+  }
+  .quote-card .quote-actions button.saved {
+    color: var(--optimal);
+  }
+
+  /* Favorites Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1161,14 +1115,18 @@
     <div class="date-nav" id="date-nav"></div>
   </div>
 
-  <!-- QUOTE CARD — moved to top, right after date nav -->
-  <div class="quote-card glass fade-up stagger-3" id="quote-card">
+  <div class="score-section fade-up stagger-3" id="score-section"></div>
+
+  <div class="details-wrap fade-up stagger-4" id="details-wrap"></div>
+
+  <!-- Quote Card -->
+  <div class="quote-card glass fade-up stagger-5" id="quote-card">
     <div class="corner"></div>
     <div style="padding: 20px;">
       <blockquote id="quote-text" style="font-size:1.05rem; line-height:1.6; color:var(--text);">
         "Loading quote..."
       </blockquote>
-      <div class="quote-attribution" id="quote-attribution"></div>
+      <div style="margin-top: 8px; font-size:0.9rem; color:var(--text2);" id="quote-attribution"></div>
       <div class="quote-actions">
         <button onclick="refreshQuote()" title="Refresh quote">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1199,12 +1157,6 @@
       </div>
     </div>
   </div>
-
-  <!-- SCORE SECTION (tiles) -->
-  <div class="score-section fade-up stagger-4" id="score-section"></div>
-
-  <!-- DETAILS CARDS -->
-  <div class="details-wrap fade-up stagger-5" id="details-wrap"></div>
 </div>
 
 <!-- FAVORITES MODAL -->
@@ -1456,6 +1408,7 @@ function displayQuote(quote) {
   document.getElementById('quote-text').textContent = `“${quote.text}”`;
   const attribution = quote.speaker || quote.author || 'Unknown';
   document.getElementById('quote-attribution').textContent = `— ${attribution}`;
+  // Update save button state
   const isSaved = savedQuotes.some(q => q.text === quote.text && q.speaker === quote.speaker);
   const saveBtn = document.getElementById('save-quote-btn');
   const saveLabel = document.getElementById('save-label');
@@ -1470,6 +1423,7 @@ function displayQuote(quote) {
 
 function refreshQuote() {
   let newQuote = getRandomQuote();
+  // Avoid same quote if possible
   while (QUOTES.length > 1 && newQuote.text === currentQuote?.text) {
     newQuote = getRandomQuote();
   }
@@ -1489,6 +1443,7 @@ function toggleSaveQuote() {
     savedQuotes.push({ text: currentQuote.text, speaker: currentQuote.speaker });
   }
   saveFavorites();
+  // Update button
   const saveBtn = document.getElementById('save-quote-btn');
   const saveLabel = document.getElementById('save-label');
   if (savedQuotes.some(q => q.text === currentQuote.text && q.speaker === currentQuote.speaker)) {
@@ -1535,7 +1490,8 @@ function selectFavorite(idx) {
 function removeFavorite(idx) {
   savedQuotes.splice(idx, 1);
   saveFavorites();
-  showFavorites();
+  showFavorites(); // refresh list
+  // Update save button state for current quote if it was removed
   if (currentQuote && !savedQuotes.some(q => q.text === currentQuote.text && q.speaker === currentQuote.speaker)) {
     const saveBtn = document.getElementById('save-quote-btn');
     const saveLabel = document.getElementById('save-label');
@@ -1545,6 +1501,7 @@ function removeFavorite(idx) {
   showToast('Quote removed from favorites.');
 }
 
+// Initialize quote card
 loadSavedQuotes();
 displayQuote(getRandomQuote());
 
@@ -2377,7 +2334,9 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── CLOCK ──
-function updateClock() {}
+function updateClock() {
+  // Optional: if you want to display a clock somewhere
+}
 setInterval(updateClock, 1000);
 updateClock();
 
