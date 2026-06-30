@@ -24,7 +24,7 @@ export default function ReadinessCard({ data, onCopyFailure, onCopySuccess }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-slate-400">Score</span>
-          <span className="text-2xl font-outfit font-bold" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
+          <span className="text-2xl font-outfit font-bold tabular-nums" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {keys.map((key) => (
@@ -39,7 +39,7 @@ export default function ReadinessCard({ data, onCopyFailure, onCopySuccess }) {
           <div className="mt-4 pt-4 border-t border-white/10">
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">Temperature Deviation</span>
-              <span className="font-mono" style={{ color: temperatureColor }}>
+              <span className="font-outfit font-semibold tabular-nums" style={{ color: temperatureColor }}>
                 {Number(temperature_deviation).toFixed(2)}°C
               </span>
             </div>

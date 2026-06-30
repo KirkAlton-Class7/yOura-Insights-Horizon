@@ -11,7 +11,7 @@ export default function SubScoreBar({ label, value }) {
     <div>
       <div className="flex justify-between text-xs">
         <span className="text-slate-400 capitalize">{label}</span>
-        <span className="font-mono" style={{ color }}>{display}</span>
+        <span className="font-outfit font-semibold tabular-nums" style={{ color }}>{display}</span>
       </div>
       <div className="h-1.5 bg-slate-700/50 rounded-full overflow-hidden mt-1">
         <div

@@ -46,10 +46,10 @@ export default function CardioCard({ data, dateWindow, allData, selectedDate }) 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           {vasAge !== null && (
-            <div><span className="text-xs text-slate-400">Vascular Age</span><br /><span className="text-2xl font-outfit font-bold" style={{ color: METRIC_COLORS.cardiovascular }}>{vasAge} years</span></div>
+            <div><span className="text-xs text-slate-400">Vascular Age</span><br /><span className="text-2xl font-outfit font-bold tabular-nums" style={{ color: METRIC_COLORS.cardiovascular }}>{vasAge} years</span></div>
           )}
           {pwv !== null && (
-            <div><span className="text-xs text-slate-400">Pulse Wave Velocity</span><br /><span className="text-2xl font-outfit font-bold" style={{ color: METRIC_COLORS.cardiovascular }}>{pwv} m/s</span></div>
+            <div><span className="text-xs text-slate-400">Pulse Wave Velocity</span><br /><span className="text-2xl font-outfit font-bold tabular-nums" style={{ color: METRIC_COLORS.cardiovascular }}>{pwv} m/s</span></div>
           )}
         </div>
         {trendBars.length > 0 && (

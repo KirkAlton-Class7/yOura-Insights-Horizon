@@ -6,7 +6,9 @@ export function parseCSVLine(line) {
     const ch = line[i];
     if (ch === '"') {
       if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
-      else { inQ = !inQ; }
+      else if (inQ) { inQ = false; }
+      else if (cur.length === 0) { inQ = true; }
+      else { cur += '"'; }
     } else if (ch === ';' && !inQ) {
       result.push(cur);
       cur = '';

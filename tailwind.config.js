@@ -10,8 +10,8 @@ export default {
         // Extend with your design tokens if needed
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        outfit: ['Outfit', 'sans-serif'],
+        sans: ['DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        outfit: ['Outfit', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       backdropBlur: {
         xs: '2px',

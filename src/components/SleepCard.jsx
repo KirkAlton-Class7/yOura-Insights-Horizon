@@ -6,8 +6,7 @@ import { getScoreColor } from '../utils/colors';
 
 export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
   const { showToast } = useToast();
-  if (!data) return null;
-  const { score, contributors } = data;
+  const { score, contributors } = data || {};
 
   const keys = ['deep_sleep', 'rem_sleep', 'total_sleep', 'efficiency', 'restfulness', 'latency', 'timing'];
 
@@ -65,8 +64,8 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
         ${(cursor += deepP, donutArc(70,70,52, cursor, Math.max(0, remP - gap), REM_C))}
         ${(cursor += remP, donutArc(70,70,52, cursor, Math.max(0, lightP - gap), LIGHT_C))}
         ${(cursor += lightP, donutArc(70,70,52, cursor, Math.max(0, awakeP - gap), AWAKE_C))}
-        <text x="70" y="64" text-anchor="middle" fill="white" font-size="18" font-weight="800" font-family="Outfit">${fmtDuration(total)}</text>
-        <text x="70" y="80" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="10" font-family="Inter">asleep</text>
+        <text x="70" y="64" text-anchor="middle" fill="white" font-size="18" font-weight="800" font-family="Outfit, ui-sans-serif, system-ui, sans-serif" style="font-variant-numeric:tabular-nums">${fmtDuration(total)}</text>
+        <text x="70" y="80" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="10" font-family="DM Sans, ui-sans-serif, system-ui, sans-serif">asleep</text>
       </svg>
     `;
 
@@ -81,7 +80,7 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
       <div key={row.label} className="flex items-center gap-3">
         <div className="w-2.5 h-2.5 rounded-full" style={{ background: row.color }} />
         <span className="text-xs text-slate-400 w-12">{row.label}</span>
-        <span className="text-xs font-mono text-white ml-auto">{fmtDuration(row.dur)}</span>
+        <span className="ml-auto text-xs font-outfit font-semibold tabular-nums text-white">{fmtDuration(row.dur)}</span>
         <span className="text-xs text-slate-500 w-10 text-right">{Math.round(row.pct * 100)}%</span>
       </div>
     ));
@@ -124,12 +123,12 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
         </div>
         {hypnoHtml}
         <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
-          <div><span className="text-slate-500">Avg HR</span><br /><span className="text-white font-mono">{avgHR} bpm</span></div>
-          <div><span className="text-slate-500">Lowest HR</span><br /><span className="text-white font-mono">{loHR} bpm</span></div>
-          <div><span className="text-slate-500">Avg HRV</span><br /><span className="text-white font-mono">{avgHRV} ms</span></div>
-          <div><span className="text-slate-500">Breathing</span><br /><span className="text-white font-mono">{avgBr} br/min</span></div>
-          <div><span className="text-slate-500">Efficiency</span><br /><span className="text-white font-mono">{eff}</span></div>
-          <div><span className="text-slate-500">Restless</span><br /><span className="text-white font-mono">{sleepModel.restless_periods || '--'}</span></div>
+          <div><span className="text-slate-500">Avg HR</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgHR} bpm</span></div>
+          <div><span className="text-slate-500">Lowest HR</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{loHR} bpm</span></div>
+          <div><span className="text-slate-500">Avg HRV</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgHRV} ms</span></div>
+          <div><span className="text-slate-500">Breathing</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgBr} br/min</span></div>
+          <div><span className="text-slate-500">Efficiency</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{eff}</span></div>
+          <div><span className="text-slate-500">Restless</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{sleepModel.restless_periods || '--'}</span></div>
         </div>
       </div>
     );
@@ -137,7 +136,7 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
 
   // Optimal bedtime window
   const bedtimeWindow = useMemo(() => {
-    if (!sleeptimeData?.optimal_bedtime) return null;
+    if (!data?.day || !sleeptimeData?.optimal_bedtime) return null;
     const ob = sleeptimeData.optimal_bedtime;
     const tz = ob.day_tz || 0;
     const midnightMs = new Date(data.day + 'T00:00:00Z').getTime() - tz * 1000;
@@ -154,6 +153,8 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
     );
   }, [sleeptimeData, data]);
 
+  if (!data) return null;
+
   return (
     <Card
       title="Sleep"
@@ -166,7 +167,7 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-slate-400">Score</span>
-          <span className="text-2xl font-outfit font-bold" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
+          <span className="text-2xl font-outfit font-bold tabular-nums" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {keys.map((key) => (

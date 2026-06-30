@@ -77,7 +77,7 @@ export default function Header({
             {/* Toggle Background Button */}
             <button
               onClick={onToggleBackground}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-mono"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
               title={backgroundMode === 'particles' ? 'Show background image' : 'Show particles'}
             >
               {backgroundMode === 'particles' ? (
@@ -93,7 +93,7 @@ export default function Header({
             {/* Copy Snapshot Button */}
             <button
               onClick={onCopySnapshot}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-mono"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
             >
               <Camera className="w-4 h-4" />
               <span className="hidden sm:inline">Copy Snapshot</span>

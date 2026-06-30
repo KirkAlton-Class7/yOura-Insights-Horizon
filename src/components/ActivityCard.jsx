@@ -43,7 +43,7 @@ export default function ActivityCard({ data }) {
           <div className="flex-1 h-2 bg-slate-700/50 rounded-full overflow-hidden">
             <div className="h-full rounded-full" style={{ width: `${(row.t / totalT) * 100}%`, background: row.c }} />
           </div>
-          <span className="text-xs font-mono text-slate-400 w-16 text-right">{fmtDuration(row.t)}</span>
+          <span className="w-16 text-right text-xs font-outfit font-medium tabular-nums text-slate-400">{fmtDuration(row.t)}</span>
         </div>
       ))}
     </div>
@@ -61,7 +61,7 @@ export default function ActivityCard({ data }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-slate-400">Score</span>
-          <span className="text-2xl font-outfit font-bold" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
+          <span className="text-2xl font-outfit font-bold tabular-nums" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {keys.map((key) => (
@@ -73,11 +73,11 @@ export default function ActivityCard({ data }) {
           ))}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
-          <div><span className="text-slate-400">Steps</span><br /><span className="text-white font-mono">{steps}</span></div>
-          <div><span className="text-slate-400">Active Cal</span><br /><span className="text-white font-mono">{activeCal}</span></div>
-          <div><span className="text-slate-400">Total Cal</span><br /><span className="text-white font-mono">{totalCal}</span></div>
-          <div><span className="text-slate-400">Equiv Walk</span><br /><span className="text-white font-mono">{equivDist} mi</span></div>
-          <div><span className="text-slate-400">Inactivity Alerts</span><br /><span className="text-white font-mono">{data.inactivity_alerts || 0}</span></div>
+          <div><span className="text-slate-400">Steps</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{steps}</span></div>
+          <div><span className="text-slate-400">Active Cal</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{activeCal}</span></div>
+          <div><span className="text-slate-400">Total Cal</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{totalCal}</span></div>
+          <div><span className="text-slate-400">Equiv Walk</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{equivDist} mi</span></div>
+          <div><span className="text-slate-400">Inactivity Alerts</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{data.inactivity_alerts || 0}</span></div>
         </div>
         {activityBreakdown}
       </div>

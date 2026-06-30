@@ -23,11 +23,12 @@ export default function ScoreRing({ score, size = 140 }) {
         style={{ transition: 'stroke-dashoffset 0.7s cubic-bezier(.23,1,.32,1)' }}
       />
       <text x={cx} y={cy - 6} textAnchor="middle" fill="white"
-        fontSize={display === '--' ? 22 : 30} fontWeight="800" fontFamily="Outfit" dominantBaseline="auto">
+        fontSize={display === '--' ? 22 : 30} fontWeight="800" fontFamily="Outfit, ui-sans-serif, system-ui, sans-serif"
+        style={{ fontVariantNumeric: 'tabular-nums' }} dominantBaseline="auto">
         {display}
       </text>
       <text x={cx} y={cy + 16} textAnchor="middle" fill="rgba(255,255,255,0.45)"
-        fontSize="11" fontFamily="Inter" dominantBaseline="auto">
+        fontSize="11" fontFamily="DM Sans, ui-sans-serif, system-ui, sans-serif" dominantBaseline="auto">
         {getScoreStatus(hasScore ? score : null)}
       </text>
     </svg>

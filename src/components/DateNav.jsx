@@ -39,7 +39,7 @@ export default function DateNav({ dates, selectedDate, onSelect, onPrevious, onN
               whileTap={{ scale: 0.96 }}
             >
               <span className="text-xs font-medium uppercase tracking-wider">{dow}</span>
-              <span className="text-lg font-outfit font-bold">{day}</span>
+              <span className="text-lg font-outfit font-bold tabular-nums">{day}</span>
             </motion.button>
           );
         })}

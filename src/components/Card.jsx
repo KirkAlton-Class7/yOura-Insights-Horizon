@@ -27,7 +27,7 @@ export default function Card({
 
   return (
     <motion.section
-      className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/80 to-slate-950/80 backdrop-blur-sm border border-white/10 shadow-xl hover:shadow-2xl transition-all duration-300 ${className}`}
+      className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/70 to-slate-950/70 backdrop-blur-xs border border-white/10 shadow-xl hover:shadow-2xl transition-all duration-300 ${className}`}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
@@ -62,7 +62,7 @@ export default function Card({
         <div className="relative border-b border-white/10 px-6 py-4 group-hover:border-white/20 transition-colors duration-300">
           {title && (
             <motion.h2 
-              className="text-sm font-semibold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent"
+              className="text-sm font-outfit font-semibold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent"
               whileHover={{ x: 5 }}
             >
               {title}

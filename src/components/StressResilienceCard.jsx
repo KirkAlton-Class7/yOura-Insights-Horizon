@@ -56,14 +56,14 @@ export default function StressResilienceCard({ stressData, resilienceData, dayti
               <div className="flex-1 h-2 bg-slate-700/50 rounded-full overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${(stressHigh / totalTime) * 100}%`, backgroundColor: SEMANTIC_COLORS.bad }} />
               </div>
-              <span className="text-xs font-mono text-slate-400 w-16 text-right">{fmtDuration(stressHigh)}</span>
+              <span className="w-16 text-right text-xs font-outfit font-medium tabular-nums text-slate-400">{fmtDuration(stressHigh)}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-slate-400 w-16">Recovery</span>
               <div className="flex-1 h-2 bg-slate-700/50 rounded-full overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${(recovHigh / totalTime) * 100}%`, backgroundColor: SEMANTIC_COLORS.optimal }} />
               </div>
-              <span className="text-xs font-mono text-slate-400 w-16 text-right">{fmtDuration(recovHigh)}</span>
+              <span className="w-16 text-right text-xs font-outfit font-medium tabular-nums text-slate-400">{fmtDuration(recovHigh)}</span>
             </div>
           </div>
         )}
@@ -71,10 +71,10 @@ export default function StressResilienceCard({ stressData, resilienceData, dayti
         {(avgStress !== null || avgRecov !== null) && (
           <div className="grid grid-cols-2 gap-2 text-sm">
             {avgStress !== null && (
-              <div><span className="text-slate-400">Avg Stress</span><br /><span className="text-white font-mono">{avgStress}</span></div>
+              <div><span className="text-slate-400">Avg Stress</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgStress}</span></div>
             )}
             {avgRecov !== null && (
-              <div><span className="text-slate-400">Avg Recovery</span><br /><span className="text-white font-mono">{avgRecov}</span></div>
+              <div><span className="text-slate-400">Avg Recovery</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgRecov}</span></div>
             )}
           </div>
         )}
