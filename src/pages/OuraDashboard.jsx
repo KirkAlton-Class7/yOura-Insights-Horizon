@@ -148,14 +148,11 @@ export default function OuraDashboard() {
         mode={backgroundMode}
         imageList={imageList}
         currentIndex={currentImageIndex}
-        onPrev={prevImage}
-        onNext={nextImage}
         isSidebarCollapsed={isSidebarCollapsed}
       />
 
       <Sidebar />
 
-      {/* No left margin – sidebar is fixed overlay */}
       <div>
         <Header
           dateString={selectedDate}
@@ -166,7 +163,7 @@ export default function OuraDashboard() {
           onNextImage={nextImage}
         />
 
-        <main className="relative z-10 max-w-6xl mx-auto px-4 py-6 space-y-8">
+        <main className="relative z-10 max-w-6xl mx-auto px-4 py-6 space-y-8 pb-16">
           <section id="scores" className="scroll-mt-20">
             <DateNav dates={dateWindow} selectedDate={selectedDate} onSelect={setSelectedDate} />
           </section>
