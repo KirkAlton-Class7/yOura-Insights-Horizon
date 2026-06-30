@@ -18,22 +18,58 @@ import { useToast } from '../context/ToastContext';
 import { getScoreColor } from '../utils/colors';
 
 const groupDatesIntoWeeks = (dates) => {
-  const weeks = [];
-  for (let end = dates.length; end > 0; end = Math.max(0, end - 7)) {
-    const start = Math.max(0, end - 7);
-    weeks.unshift(dates.slice(start, end));
-  }
-  return weeks;
+  const weekStarts = new Set();
+
+  Array.from(new Set(dates)).sort().forEach((date) => {
+    const [year, month, day] = date.split('-').map(Number);
+    const value = Date.UTC(year, month - 1, day);
+    weekStarts.add(value - new Date(value).getUTCDay() * 86400000);
+  });
+
+  return Array.from(weekStarts)
+    .sort((a, b) => a - b)
+    .map(weekStart => Array.from({ length: 7 }, (_, offset) => (
+      new Date(weekStart + offset * 86400000).toISOString().slice(0, 10)
+    )));
+};
+
+const getWeekday = (date) => {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+};
+
+const selectDateInWeek = (currentDate, dates) => {
+  if (!dates.length) return '';
+  const targetWeekday = getWeekday(currentDate);
+  const matchingDate = dates.find(date => getWeekday(date) === targetWeekday);
+  if (matchingDate) return matchingDate;
+
+  return dates.reduce((closest, date) => (
+    Math.abs(getWeekday(date) - targetWeekday) < Math.abs(getWeekday(closest) - targetWeekday)
+      ? date
+      : closest
+  ), dates[0]);
+};
+
+const findWeekIndex = (weeks, date) => {
+  const index = weeks.findIndex(week => week.includes(date));
+  return index < 0 ? 0 : index;
 };
 
 export default function OuraDashboard() {
   const { showToast } = useToast();
   const [appData, setAppData] = useState({});
-  const [dateWeeks, setDateWeeks] = useState([]);
-  const [weekIndex, setWeekIndex] = useState(0);
+  const [availableDates, setAvailableDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [isDashboardVisible, setIsDashboardVisible] = useState(false);
-  const dateWindow = useMemo(() => dateWeeks[weekIndex] || [], [dateWeeks, weekIndex]);
+  const dateWeeks = useMemo(() => groupDatesIntoWeeks(availableDates), [availableDates]);
+  const weekIndex = useMemo(() => findWeekIndex(dateWeeks, selectedDate), [dateWeeks, selectedDate]);
+  const weekDates = useMemo(() => dateWeeks[weekIndex] || [], [dateWeeks, weekIndex]);
+  const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
+  const dateWindow = useMemo(
+    () => weekDates.filter(date => availableDateSet.has(date)),
+    [weekDates, availableDateSet],
+  );
 
   // Background state
   const [backgroundMode, setBackgroundMode] = useState('particles');
@@ -84,9 +120,7 @@ export default function OuraDashboard() {
       return;
     }
     const mostRecent = sorted[sorted.length - 1];
-    const weeks = groupDatesIntoWeeks(sorted);
-    setDateWeeks(weeks);
-    setWeekIndex(weeks.length - 1);
+    setAvailableDates(sorted);
     setSelectedDate(mostRecent);
     setIsDashboardVisible(true);
   }, [showToast]);
@@ -114,10 +148,8 @@ export default function OuraDashboard() {
     const nextIndex = Math.min(Math.max(weekIndex + direction, 0), dateWeeks.length - 1);
     if (nextIndex === weekIndex) return;
 
-    const selectedOffset = Math.max(0, dateWindow.indexOf(selectedDate));
-    const nextWeek = dateWeeks[nextIndex];
-    setWeekIndex(nextIndex);
-    setSelectedDate(nextWeek[Math.min(selectedOffset, nextWeek.length - 1)]);
+    const nextWeek = dateWeeks[nextIndex].filter(date => availableDateSet.has(date));
+    setSelectedDate(selectDateInWeek(selectedDate, nextWeek));
   };
 
   const getTrendBars = (category) => {
@@ -186,7 +218,8 @@ export default function OuraDashboard() {
         <main className="relative z-10 max-w-6xl mx-auto px-4 py-6 space-y-8 pb-16">
           <section id="scores" className="scroll-mt-20">
             <DateNav
-              dates={dateWindow}
+              dates={weekDates}
+              availableDates={availableDates}
               selectedDate={selectedDate}
               onSelect={setSelectedDate}
               onPrevious={() => changeWeek(-1)}
