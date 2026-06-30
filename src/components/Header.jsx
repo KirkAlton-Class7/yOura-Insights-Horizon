@@ -1,25 +1,15 @@
 import { motion } from 'framer-motion';
-import { Clock, Camera, Image, ImageOff } from 'lucide-react'; // added Image and ImageOff
-import { useState, useEffect } from 'react';
+import { Camera, Image, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Header({ 
   dateString, 
   onCopySnapshot, 
   backgroundMode, 
-  onToggleBackground 
+  onToggleBackground,
+  onPrevImage,
+  onNextImage,
 }) {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const formattedTime = currentTime.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
+  const isImageMode = backgroundMode === 'image';
 
   return (
     <motion.header
@@ -55,10 +45,33 @@ export default function Header({
             )}
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
-              <Clock className="w-4 h-4 text-cyan-400" />
-              <span className="text-sm font-mono text-slate-300">{formattedTime}</span>
+          <div className="flex items-center gap-3">
+            {/* Image Navigation Arrows */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onPrevImage}
+                disabled={!isImageMode}
+                className={`p-1.5 rounded-full transition-all ${
+                  isImageMode
+                    ? 'hover:bg-white/10 text-slate-300'
+                    : 'text-slate-600 cursor-not-allowed opacity-50'
+                }`}
+                title="Previous image"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={onNextImage}
+                disabled={!isImageMode}
+                className={`p-1.5 rounded-full transition-all ${
+                  isImageMode
+                    ? 'hover:bg-white/10 text-slate-300'
+                    : 'text-slate-600 cursor-not-allowed opacity-50'
+                }`}
+                title="Next image"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Toggle Background Button */}

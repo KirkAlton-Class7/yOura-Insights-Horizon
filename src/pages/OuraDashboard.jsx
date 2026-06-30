@@ -22,23 +22,12 @@ export default function OuraDashboard() {
   const [dateWindow, setDateWindow] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [isDashboardVisible, setIsDashboardVisible] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem('oura_sidebar_collapsed');
-    return saved === 'true';
-  });
 
   // Background state
   const [backgroundMode, setBackgroundMode] = useState('particles');
   const [imageList, setImageList] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  useEffect(() => {
-    localStorage.setItem('oura_sidebar_collapsed', String(isSidebarCollapsed));
-  }, [isSidebarCollapsed]);
-
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarCollapsed((prev) => !prev);
-  }, []);
+  const [isSidebarCollapsed] = useState(true); // always collapsed, no toggle
 
   // Load gallery manifest
   useEffect(() => {
@@ -164,14 +153,17 @@ export default function OuraDashboard() {
         isSidebarCollapsed={isSidebarCollapsed}
       />
 
-      <Sidebar isCollapsed={isSidebarCollapsed} onToggleCollapsed={toggleSidebar} />
+      <Sidebar />
 
-      <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'xl:ml-20' : 'xl:ml-72'}`}>
+      {/* No left margin – sidebar is fixed overlay */}
+      <div>
         <Header
           dateString={selectedDate}
           onCopySnapshot={handleCopySnapshot}
           backgroundMode={backgroundMode}
           onToggleBackground={toggleBackground}
+          onPrevImage={prevImage}
+          onNextImage={nextImage}
         />
 
         <main className="relative z-10 max-w-6xl mx-auto px-4 py-6 space-y-8">
