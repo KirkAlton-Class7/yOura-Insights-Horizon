@@ -1,29 +1,38 @@
-import { createContext, useContext, useState } from 'react';
+import { useState } from 'react';
 import Toast from '../components/Toast';
-
-const ToastContext = createContext();
+import { ToastContext } from './toast';
 
 export function ToastProvider({ children }) {
-  const [toast, setToast] = useState({ message: '', visible: false });
+  const [toast, setToast] = useState({ title: '', message: '', type: 'success', visible: false });
 
-  const showToast = (message) => {
-    setToast({ message, visible: true });
+  const showToast = (content) => {
+    if (typeof content === 'string') {
+      setToast({ title: '', message: content, type: 'success', visible: true });
+      return;
+    }
+
+    setToast({
+      title: content.title || '',
+      message: content.message || '',
+      type: content.type || 'error',
+      visible: true,
+    });
   };
 
   const hideToast = () => {
-    setToast({ ...toast, visible: false });
+    setToast(current => ({ ...current, visible: false }));
   };
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <Toast message={toast.message} isVisible={toast.visible} onClose={hideToast} />
+      <Toast
+        title={toast.title}
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.visible}
+        onClose={hideToast}
+      />
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  const context = useContext(ToastContext);
-  if (!context) throw new Error('useToast must be used within ToastProvider');
-  return context;
 }

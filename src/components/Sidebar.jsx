@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   Menu,
   X,
+  House,
   Gauge,
   BatteryCharging,
   Moon,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 
 const navItems = [
+  { id: 'home', label: 'Home', icon: House },
   { id: 'scores', label: 'Scores', icon: Gauge },
   { id: 'readiness', label: 'Readiness', icon: BatteryCharging },
   { id: 'sleep', label: 'Sleep', icon: Moon },
@@ -23,7 +25,7 @@ const navItems = [
 ];
 
 // --- Desktop Sidebar (icons only) ---
-const DesktopSidebar = ({ activeSection, scrollToSection }) => (
+const DesktopSidebar = ({ activeSection, navigateToItem }) => (
   <aside className="fixed top-0 left-0 h-full w-20 bg-gradient-to-b from-slate-900/95 to-slate-950/95 border-r border-white/10 shadow-xl z-30 overflow-y-auto hidden xl:block">
     <div className="flex flex-col h-full">
       <div className="p-3.5 border-b border-white/10 flex justify-center">
@@ -46,7 +48,7 @@ const DesktopSidebar = ({ activeSection, scrollToSection }) => (
                 animate={{ opacity: 1, x: 0 }}
               >
                 <button
-                  onClick={() => scrollToSection(item.id)}
+                  onClick={() => navigateToItem(item.id)}
                   title={item.label}
                   className={`w-full flex items-center justify-center rounded-xl transition-all duration-300 group py-3 ${
                     isActive
@@ -74,14 +76,15 @@ const DesktopSidebar = ({ activeSection, scrollToSection }) => (
 const MobileMenuButton = ({ setIsMobileMenuOpen }) => (
   <button
     onClick={() => setIsMobileMenuOpen(true)}
-    className="fixed top-4 left-4 z-50 xl:hidden bg-slate-800/80 backdrop-blur-xl p-2.5 rounded-xl border border-white/10 shadow-lg"
+    className="fixed left-2.5 top-2.5 z-50 rounded-xl border border-white/10 bg-slate-800/80 p-2.5 shadow-lg backdrop-blur-xl xl:hidden"
+    aria-label="Open navigation menu"
   >
     <Menu className="w-5 h-5" />
   </button>
 );
 
 // --- Mobile Overlay Menu (icons only) ---
-const MobileOverlay = ({ isMobileMenuOpen, setIsMobileMenuOpen, activeSection, scrollToSection }) => (
+const MobileOverlay = ({ isMobileMenuOpen, setIsMobileMenuOpen, activeSection, navigateToItem }) => (
   <AnimatePresence>
     {isMobileMenuOpen && (
       <motion.div
@@ -103,7 +106,7 @@ const MobileOverlay = ({ isMobileMenuOpen, setIsMobileMenuOpen, activeSection, s
             return (
               <button
                 key={item.id}
-                onClick={() => scrollToSection(item.id)}
+                onClick={() => navigateToItem(item.id)}
                 className={`flex flex-col items-center gap-1 p-4 rounded-xl transition-all ${
                   isActive
                     ? 'bg-cyan-500/20 border border-cyan-500/30'
@@ -124,9 +127,9 @@ const MobileOverlay = ({ isMobileMenuOpen, setIsMobileMenuOpen, activeSection, s
 );
 
 // --- Main Sidebar Component ---
-export default function Sidebar() {
+export default function Sidebar({ onHome }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState(navItems[0]?.id || 'scores');
+  const [activeSection, setActiveSection] = useState('scores');
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -155,7 +158,7 @@ export default function Sidebar() {
       }
     );
 
-    navItems.forEach((item) => {
+    navItems.filter(item => item.id !== 'home').forEach((item) => {
       const element = document.getElementById(item.id);
       if (element) observer.observe(element);
     });
@@ -173,15 +176,24 @@ export default function Sidebar() {
     window.scrollTo({ top: targetTop, behavior: 'smooth' });
   };
 
+  const navigateToItem = (id) => {
+    if (id === 'home') {
+      setIsMobileMenuOpen(false);
+      onHome();
+      return;
+    }
+    scrollToSection(id);
+  };
+
   return (
     <>
-      <DesktopSidebar activeSection={activeSection} scrollToSection={scrollToSection} />
+      <DesktopSidebar activeSection={activeSection} navigateToItem={navigateToItem} />
       <MobileMenuButton setIsMobileMenuOpen={setIsMobileMenuOpen} />
       <MobileOverlay
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         activeSection={activeSection}
-        scrollToSection={scrollToSection}
+        navigateToItem={navigateToItem}
       />
     </>
   );

@@ -1,5 +1,5 @@
 import Card from './Card';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/toast';
 import { getBloodOxygenColor, METRIC_COLORS } from '../utils/colors';
 
 export default function BiometricsCard({ spo2Data, heartrateData, temperatureData }) {

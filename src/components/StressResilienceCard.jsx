@@ -1,6 +1,6 @@
 import Card from './Card';
 import SubScoreBar from './SubScoreBar';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/toast';
 import { getStatusColor, SEMANTIC_COLORS } from '../utils/colors';
 
 export default function StressResilienceCard({ stressData, resilienceData, daytimeStressData }) {

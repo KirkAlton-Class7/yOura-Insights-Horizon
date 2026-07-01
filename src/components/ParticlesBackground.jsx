@@ -8,8 +8,9 @@ export default function ParticlesBackground() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let particles = [];
-    const COUNT = 80;
+    const COUNT = 150;
     const CONNECTION_DIST = 100;
+    const CONNECTION_RATE = 0.465;
 
     function resize() {
       canvas.width = window.innerWidth;
@@ -52,6 +53,9 @@ export default function ParticlesBackground() {
     function drawConnections() {
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
+          const pairHash = ((i * 73856093) ^ (j * 19349663)) >>> 0;
+          if ((pairHash % 1000) / 1000 >= CONNECTION_RATE) continue;
+
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx*dx + dy*dy);

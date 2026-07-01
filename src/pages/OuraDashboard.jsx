@@ -16,8 +16,23 @@ import BiometricsCard from '../components/BiometricsCard';
 import BackgroundManager from '../components/BackgroundManager';
 import { buildDashboardSnapshot } from '../utils/snapshot';
 import { writeClipboardText } from '../utils/clipboard';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/toast';
 import { useDateNavigation } from '../hooks/useDateNavigation';
+
+const REQUIRED_DATA_KEYS = [
+  'activity',
+  'readiness',
+  'sleep',
+  'spo2',
+  'heartrate',
+  'temperature',
+  'sleeptime',
+  'stress',
+  'resilience',
+  'daytimestress',
+  'cardiovascularage',
+  'sleepmodel',
+];
 
 export default function OuraDashboard() {
   const { showToast } = useToast();
@@ -25,6 +40,7 @@ export default function OuraDashboard() {
   const [availableDates, setAvailableDates] = useState([]);
   const [isDashboardVisible, setIsDashboardVisible] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [areWidgetsHidden, setAreWidgetsHidden] = useState(false);
   const {
     selectedDate,
     setSelectedDate,
@@ -72,22 +88,42 @@ export default function OuraDashboard() {
     setCurrentImageIndex(prev => (prev - 1 + imageList.length) % imageList.length);
   }, [imageList.length]);
 
+  const toggleWidgets = useCallback(() => {
+    setAreWidgetsHidden(hidden => !hidden);
+  }, []);
+
   const handleDataLoaded = useCallback((data) => {
-    setAppData(data);
+    const hasAllRequiredData = REQUIRED_DATA_KEYS.every(
+      key => data[key] && Object.keys(data[key]).length > 0,
+    );
+    if (!hasAllRequiredData) {
+      throw new Error('Required dashboard data is missing or empty.');
+    }
+
     const allDates = new Set();
     ['activity', 'readiness', 'sleep', 'spo2', 'stress', 'resilience', 'cardiovascularage'].forEach(k => {
       Object.keys(data[k] || {}).forEach(d => allDates.add(d));
     });
     const sorted = Array.from(allDates).sort();
     if (sorted.length === 0) {
-      showToast('No valid date data found. Please check your CSV files.');
-      return;
+      throw new Error('No valid dates were found in the uploaded data.');
     }
     const mostRecent = sorted[sorted.length - 1];
+    setAppData(data);
     setAvailableDates(sorted);
     setSelectedDate(mostRecent);
     setIsDashboardVisible(true);
-  }, [showToast, setSelectedDate]);
+  }, [setSelectedDate]);
+
+  const handleHome = useCallback(() => {
+    setIsCompareOpen(false);
+    setAreWidgetsHidden(false);
+    setAppData({});
+    setAvailableDates([]);
+    setSelectedDate('');
+    setIsDashboardVisible(false);
+    window.scrollTo({ top: 0 });
+  }, [setSelectedDate]);
 
   const handleCopySnapshot = useCallback(async () => {
     const snapshot = buildDashboardSnapshot({
@@ -130,7 +166,9 @@ export default function OuraDashboard() {
         isSidebarCollapsed={isSidebarCollapsed}
       />
 
-      <Sidebar />
+      <div className={`transition-opacity duration-500 ${areWidgetsHidden ? 'pointer-events-none opacity-0' : 'opacity-100'}`}>
+        <Sidebar onHome={handleHome} />
+      </div>
 
       <div>
         <Header
@@ -141,9 +179,13 @@ export default function OuraDashboard() {
           onToggleBackground={toggleBackground}
           onPrevImage={prevImage}
           onNextImage={nextImage}
+          areWidgetsHidden={areWidgetsHidden}
+          onToggleWidgets={toggleWidgets}
         />
 
-        <main className="relative z-10 max-w-6xl mx-auto px-4 py-6 space-y-8 pb-16">
+        <main className={`relative z-10 max-w-6xl mx-auto px-4 py-6 space-y-8 pb-16 transition-opacity duration-500 ${
+          areWidgetsHidden ? 'pointer-events-none opacity-0' : 'opacity-100'
+        }`}>
           <section id="scores" className="scroll-mt-20">
             <DateNav
               dates={weekDates}

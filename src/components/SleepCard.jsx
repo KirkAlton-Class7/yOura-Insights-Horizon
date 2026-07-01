@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import Card from './Card';
 import SubScoreBar from './SubScoreBar';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
 
 export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {

@@ -2,7 +2,7 @@ import DateNav from './DateNav';
 import ScoreSummaryGrid from './ScoreSummaryGrid';
 import { useDateNavigation } from '../hooks/useDateNavigation';
 
-export default function ComparePanel({ label, appData, availableDates, initialDate }) {
+export default function ComparePanel({ appData, availableDates, initialDate }) {
   const {
     selectedDate,
     setSelectedDate,
@@ -15,10 +15,7 @@ export default function ComparePanel({ label, appData, availableDates, initialDa
 
   return (
     <section className="relative isolate space-y-5 p-5 sm:p-7">
-      <div className="flex items-center justify-between">
-        <h3 className="font-outfit text-sm font-semibold uppercase tracking-wider text-slate-400">
-          {label}
-        </h3>
+      <div className="flex items-center">
         <span className="font-outfit text-sm font-semibold tabular-nums text-slate-200">
           {selectedDate}
         </span>

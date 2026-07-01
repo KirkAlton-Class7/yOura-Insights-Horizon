@@ -9,7 +9,7 @@ export default function BackgroundManager({
   const currentItem = imageList[currentIndex % imageList.length] || {};
   const base = import.meta.env.BASE_URL || '/';
   const upscaledFilename = currentItem.filename?.replace(/\.webp$/i, '-sharpen-upscale-4x.webp');
-  const imageUrl = mode === 'image' && upscaledFilename
+  const desktopImageUrl = mode === 'image' && upscaledFilename
     ? `${base}data/images/image_gallery/upscaled/${upscaledFilename}`
     : '';
 
@@ -26,18 +26,22 @@ export default function BackgroundManager({
 
   return (
     <div className="fixed inset-0 z-0">
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={currentItem.title || 'Background'}
-          className="w-full h-full object-cover"
-          onError={(event) => {
-            if (fallbackImageUrl && event.currentTarget.src !== fallbackImageUrl) {
-              event.currentTarget.onerror = null;
-              event.currentTarget.src = fallbackImageUrl;
-            }
-          }}
-        />
+      {desktopImageUrl ? (
+        <picture className="block w-full h-full">
+          {fallbackImageUrl && <source media="(max-width: 767px)" srcSet={fallbackImageUrl} />}
+          <img
+            src={desktopImageUrl}
+            alt={currentItem.title || 'Background'}
+            className="w-full h-full object-cover"
+            decoding="async"
+            onError={(event) => {
+              if (fallbackImageUrl && event.currentTarget.src !== fallbackImageUrl) {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = fallbackImageUrl;
+              }
+            }}
+          />
+        </picture>
       ) : (
         <div className="w-full h-full bg-slate-900 flex items-center justify-center">
           <p className="text-white/40">No images available</p>

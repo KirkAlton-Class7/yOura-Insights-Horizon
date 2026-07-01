@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Camera, Image, ImageOff, ChevronLeft, ChevronRight, SquareSplitHorizontal } from 'lucide-react';
+import { Camera, Image, ImageOff, ChevronLeft, ChevronRight, Eye, EyeOff, SquareSplitHorizontal } from 'lucide-react';
 
 export default function Header({ 
   dateString,
@@ -9,6 +9,8 @@ export default function Header({
   onToggleBackground,
   onPrevImage,
   onNextImage,
+  areWidgetsHidden,
+  onToggleWidgets,
 }) {
   const isImageMode = backgroundMode === 'image';
 
@@ -17,17 +19,17 @@ export default function Header({
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 100 }}
-      className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/95 shadow-md overflow-x-hidden"
+      className="sticky top-0 z-30 touch-pan-x overflow-x-auto overscroll-x-contain border-b border-white/10 bg-slate-950/95 shadow-md scrollbar-hide xl:overflow-x-hidden"
     >
-      <div className="relative">
+      <div className="relative min-w-max xl:min-w-full">
         <motion.div
           className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"
           animate={{ x: ['-100%', '100%'] }}
           transition={{ duration: 3, repeat: Infinity, repeatDelay: 26, ease: 'linear' }}
         />
 
-        <div className="flex items-center justify-between px-4 py-3 lg:px-6 lg:py-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6 py-3 pl-20 pr-4 lg:py-4 xl:justify-between xl:px-6">
+          <div className="flex flex-shrink-0 items-center gap-3">
             <div className="flex items-center gap-2">
               <svg width="22" height="22" viewBox="0 0 80 80" fill="none">
                 <circle cx="40" cy="40" r="36" stroke="rgba(6,182,212,0.25)" stroke-width="9"/>
@@ -46,67 +48,83 @@ export default function Header({
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Image Navigation Arrows */}
-            <div className="flex items-center gap-1">
+          <div className="flex flex-shrink-0 items-center gap-3">
+            <div className="flex items-center gap-3">
+              {/* Image Navigation Arrows */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onPrevImage}
+                  disabled={!isImageMode}
+                  className={`p-1.5 rounded-full transition-all ${
+                    isImageMode
+                      ? 'hover:bg-white/10 text-slate-300'
+                      : 'text-slate-600 cursor-not-allowed opacity-50'
+                  }`}
+                  title="Previous image"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={onNextImage}
+                  disabled={!isImageMode}
+                  className={`p-1.5 rounded-full transition-all ${
+                    isImageMode
+                      ? 'hover:bg-white/10 text-slate-300'
+                      : 'text-slate-600 cursor-not-allowed opacity-50'
+                  }`}
+                  title="Next image"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Toggle Background Button */}
               <button
-                onClick={onPrevImage}
-                disabled={!isImageMode}
-                className={`p-1.5 rounded-full transition-all ${
-                  isImageMode
-                    ? 'hover:bg-white/10 text-slate-300'
-                    : 'text-slate-600 cursor-not-allowed opacity-50'
-                }`}
-                title="Previous image"
+                onClick={onToggleBackground}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
+                title={backgroundMode === 'particles' ? 'Show background image' : 'Show particles'}
               >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={onNextImage}
-                disabled={!isImageMode}
-                className={`p-1.5 rounded-full transition-all ${
-                  isImageMode
-                    ? 'hover:bg-white/10 text-slate-300'
-                    : 'text-slate-600 cursor-not-allowed opacity-50'
-                }`}
-                title="Next image"
-              >
-                <ChevronRight className="w-5 h-5" />
+                {backgroundMode === 'particles' ? (
+                  <Image className="w-4 h-4" />
+                ) : (
+                  <ImageOff className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {backgroundMode === 'particles' ? 'Image' : 'Particles'}
+                </span>
               </button>
             </div>
 
-            {/* Toggle Background Button */}
-            <button
-              onClick={onToggleBackground}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
-              title={backgroundMode === 'particles' ? 'Show background image' : 'Show particles'}
-            >
-              {backgroundMode === 'particles' ? (
-                <Image className="w-4 h-4" />
-              ) : (
-                <ImageOff className="w-4 h-4" />
-              )}
-              <span className="hidden sm:inline">
-                {backgroundMode === 'particles' ? 'Image' : 'Particles'}
-              </span>
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Compare Button */}
+              <button
+                onClick={onCompare}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
+              >
+                <SquareSplitHorizontal className="w-4 h-4" />
+                <span>Compare</span>
+              </button>
 
-            {/* Compare Button */}
-            <button
-              onClick={onCompare}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
-            >
-              <SquareSplitHorizontal className="w-4 h-4" />
-              <span>Compare</span>
-            </button>
+              {/* Copy Snapshot Button */}
+              <button
+                onClick={onCopySnapshot}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
+              >
+                <Camera className="w-4 h-4" />
+                <span className="hidden sm:inline">Copy Snapshot</span>
+              </button>
+            </div>
 
-            {/* Copy Snapshot Button */}
+            {/* Toggle Widget Visibility */}
             <button
-              onClick={onCopySnapshot}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
+              type="button"
+              onClick={onToggleWidgets}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/70 text-slate-300 transition-all hover:border-white/40 hover:text-cyan-300"
+              title={areWidgetsHidden ? 'Show widgets' : 'Hide widgets'}
+              aria-label={areWidgetsHidden ? 'Show widgets' : 'Hide widgets'}
+              aria-pressed={areWidgetsHidden}
             >
-              <Camera className="w-4 h-4" />
-              <span className="hidden sm:inline">Copy Snapshot</span>
+              {areWidgetsHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
           </div>
         </div>

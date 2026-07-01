@@ -50,7 +50,6 @@ export default function CompareModal({ appData, availableDates, initialDate, onC
         </div>
 
         <ComparePanel
-          label="Top date"
           appData={appData}
           availableDates={availableDates}
           initialDate={initialDate}
@@ -59,7 +58,6 @@ export default function CompareModal({ appData, availableDates, initialDate, onC
         <div className="mx-5 border-t border-white/15 sm:mx-7" />
 
         <ComparePanel
-          label="Bottom date"
           appData={appData}
           availableDates={availableDates}
           initialDate={secondDate}

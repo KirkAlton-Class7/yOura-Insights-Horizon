@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Camera } from 'lucide-react';
 import ScoreRing from './ScoreRing';
 import { writeClipboardText } from '../utils/clipboard';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/toast';
 
 export default function ScoreCard({ label, data, trendBars, weeklyScores }) {
   const { showToast } = useToast();
