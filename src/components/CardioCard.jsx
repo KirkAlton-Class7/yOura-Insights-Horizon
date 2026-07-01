@@ -1,6 +1,7 @@
 import Card from './Card';
 import { useToast } from '../context/toast';
 import { METRIC_COLORS } from '../utils/colors';
+import { buildCardiovascularCardSnapshot } from '../utils/cardSnapshots';
 
 export default function CardioCard({ data, dateWindow, allData, selectedDate }) {
   const { showToast } = useToast();
@@ -38,7 +39,7 @@ export default function CardioCard({ data, dateWindow, allData, selectedDate }) 
     <Card
       title="Cardiovascular Health"
       subtitle="Vascular age and pulse wave velocity"
-      snapshotText={`Vascular Age: ${vasAge || 'N/A'}`}
+      snapshotText={buildCardiovascularCardSnapshot(data, dateWindow, allData, selectedDate)}
       snapshotLabel="Cardiovascular snapshot"
       onCopyFailure={() => showToast('Failed to copy Cardiovascular snapshot.')}
       onCopySuccess={() => showToast('Cardiovascular snapshot copied to clipboard.')}

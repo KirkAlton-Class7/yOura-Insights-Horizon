@@ -2,6 +2,7 @@ import Card from './Card';
 import SubScoreBar from './SubScoreBar';
 import { useToast } from '../context/toast';
 import { getStatusColor, SEMANTIC_COLORS } from '../utils/colors';
+import { buildStressResilienceCardSnapshot } from '../utils/cardSnapshots';
 
 export default function StressResilienceCard({ stressData, resilienceData, daytimeStressData }) {
   const { showToast } = useToast();
@@ -43,7 +44,7 @@ export default function StressResilienceCard({ stressData, resilienceData, dayti
     <Card
       title="Stress & Resilience"
       subtitle="Daily stress, recovery, and resilience"
-      snapshotText={`Stress summary: ${daySummary || 'N/A'}`}
+      snapshotText={buildStressResilienceCardSnapshot(stressData, resilienceData, daytimeStressData)}
       snapshotLabel="Stress & Resilience snapshot"
       onCopyFailure={() => showToast('Failed to copy Stress & Resilience snapshot.')}
       onCopySuccess={() => showToast('Stress & Resilience snapshot copied to clipboard.')}

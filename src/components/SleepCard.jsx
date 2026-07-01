@@ -3,6 +3,7 @@ import Card from './Card';
 import SubScoreBar from './SubScoreBar';
 import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
+import { buildSleepCardSnapshot } from '../utils/cardSnapshots';
 
 export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
   const { showToast } = useToast();
@@ -159,7 +160,7 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
     <Card
       title="Sleep"
       subtitle="Sleep score and contributors"
-      snapshotText={`Sleep: ${score ?? '--'}`}
+      snapshotText={buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData)}
       snapshotLabel="Sleep snapshot"
       onCopyFailure={() => showToast('Failed to copy Sleep snapshot.')}
       onCopySuccess={() => showToast('Sleep snapshot copied to clipboard.')}

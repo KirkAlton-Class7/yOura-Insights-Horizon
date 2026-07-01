@@ -1,6 +1,7 @@
 import Card from './Card';
 import { useToast } from '../context/toast';
 import { getBloodOxygenColor, METRIC_COLORS } from '../utils/colors';
+import { buildBiometricsCardSnapshot } from '../utils/cardSnapshots';
 
 export default function BiometricsCard({ spo2Data, heartrateData, temperatureData }) {
   const { showToast } = useToast();
@@ -30,7 +31,7 @@ export default function BiometricsCard({ spo2Data, heartrateData, temperatureDat
     <Card
       title="Biometrics"
       subtitle="Blood oxygen, heart rate, and temperature"
-      snapshotText={`SpO2: ${spo2Val || 'N/A'}%, HR: ${avgBpm || 'N/A'} bpm`}
+      snapshotText={buildBiometricsCardSnapshot(spo2Data, heartrateData, temperatureData)}
       snapshotLabel="Biometrics snapshot"
       onCopyFailure={() => showToast('Failed to copy Biometrics snapshot.')}
       onCopySuccess={() => showToast('Biometrics snapshot copied to clipboard.')}

@@ -114,17 +114,11 @@ export default function QuoteCard({ onCopyFailure, onCopySuccess }) {
   if (!currentQuote) return null;
 
   const { primary, secondary } = getQuoteAttribution(currentQuote);
-  const formattedQuote = formatQuoteText(currentQuote);
-
   return (
     <>
       <Card
         title="Featured Quote"
         subtitle="Inspiration from the community"
-        snapshotText={formattedQuote}
-        snapshotLabel="Quote snapshot"
-        onCopyFailure={onCopyFailure}
-        onCopySuccess={onCopySuccess}
       >
         <div className="relative">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-2xl"></div>

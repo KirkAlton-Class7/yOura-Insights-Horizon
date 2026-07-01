@@ -1,8 +1,11 @@
 import Card from './Card';
 import SubScoreBar from './SubScoreBar';
 import { getScoreColor, SEMANTIC_COLORS } from '../utils/colors';
+import { buildReadinessCardSnapshot } from '../utils/cardSnapshots';
+import { useToast } from '../context/toast';
 
-export default function ReadinessCard({ data, onCopyFailure, onCopySuccess }) {
+export default function ReadinessCard({ data }) {
+  const { showToast } = useToast();
   if (!data) return null;
   const { score, contributors, temperature_deviation } = data;
   const keys = ['hrv_balance', 'resting_heart_rate', 'recovery_index', 'body_temperature', 'previous_night', 'previous_day_activity', 'sleep_balance', 'activity_balance', 'sleep_regularity'];
@@ -16,10 +19,10 @@ export default function ReadinessCard({ data, onCopyFailure, onCopySuccess }) {
     <Card
       title="Readiness"
       subtitle="Daily readiness and contributors"
-      snapshotText={`Readiness: ${score ?? '--'}`}
+      snapshotText={buildReadinessCardSnapshot(data)}
       snapshotLabel="Readiness snapshot"
-      onCopyFailure={onCopyFailure}
-      onCopySuccess={onCopySuccess}
+      onCopyFailure={() => showToast('Failed to copy Readiness snapshot.')}
+      onCopySuccess={() => showToast('Readiness snapshot copied to clipboard.')}
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">

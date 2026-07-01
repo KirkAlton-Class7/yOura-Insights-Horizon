@@ -2,6 +2,7 @@ import Card from './Card';
 import SubScoreBar from './SubScoreBar';
 import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
+import { buildActivityCardSnapshot } from '../utils/cardSnapshots';
 
 export default function ActivityCard({ data }) {
   const { showToast } = useToast();
@@ -53,7 +54,7 @@ export default function ActivityCard({ data }) {
     <Card
       title="Activity"
       subtitle="Activity score and breakdown"
-      snapshotText={`Activity: ${score ?? '--'}`}
+      snapshotText={buildActivityCardSnapshot(data)}
       snapshotLabel="Activity snapshot"
       onCopyFailure={() => showToast('Failed to copy Activity snapshot.')}
       onCopySuccess={() => showToast('Activity snapshot copied to clipboard.')}
