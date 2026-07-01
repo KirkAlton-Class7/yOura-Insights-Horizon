@@ -22,11 +22,11 @@ export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
   const heartrateData = appData.heartrate?.[selectedDate] || [];
   const temperatureData = appData.temperature?.[selectedDate] || [];
 
-  if (readinessData) sections.push(buildReadinessCardSnapshot(readinessData));
-  if (sleepData) sections.push(buildSleepCardSnapshot(sleepData, sleepmodelData, sleeptimeData));
-  if (activityData) sections.push(buildActivityCardSnapshot(activityData));
+  if (readinessData) sections.push(buildReadinessCardSnapshot(readinessData, { date: selectedDate, dashboard: true }));
+  if (sleepData) sections.push(buildSleepCardSnapshot(sleepData, sleepmodelData, sleeptimeData, { date: selectedDate, dashboard: true }));
+  if (activityData) sections.push(buildActivityCardSnapshot(activityData, { date: selectedDate, dashboard: true }));
   if (stressData || resilienceData || daytimeStressData.length) {
-    sections.push(buildStressResilienceCardSnapshot(stressData, resilienceData, daytimeStressData));
+    sections.push(buildStressResilienceCardSnapshot(stressData, resilienceData, daytimeStressData, { date: selectedDate }));
   }
   if (cardioData) {
     sections.push(buildCardiovascularCardSnapshot(
@@ -37,7 +37,7 @@ export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
     ));
   }
   if (spo2Data || heartrateData.length || temperatureData.length) {
-    sections.push(buildBiometricsCardSnapshot(spo2Data, heartrateData, temperatureData));
+    sections.push(buildBiometricsCardSnapshot(spo2Data, heartrateData, temperatureData, selectedDate));
   }
 
   if (dateWindow?.length) {

@@ -57,14 +57,25 @@ const formatTime = value => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
+const recordDate = (...records) => {
+  const record = records.find(Boolean);
+  return record?.day || String(record?.timestamp || '').slice(0, 10) || '';
+};
+
 const section = (title, lines) => {
   const visibleLines = lines.filter(Boolean);
   return visibleLines.length ? [title, ...visibleLines.map(line => `  ${line}`)].join('\n') : '';
 };
 
-const snapshot = (title, sections) => {
+const snapshot = (title, sections, headerLine = '') => {
   const body = sections.filter(Boolean).join('\n\n');
-  return `${title} Snapshot\n${'='.repeat(title.length + 9)}\n\n${body}`;
+  return [
+    `${title} Snapshot`,
+    headerLine,
+    '='.repeat(title.length + 9),
+    '',
+    body,
+  ].filter((line, index) => line || index === 3).join('\n');
 };
 
 const contributorLines = (contributors, definitions) => definitions.map(([key, label]) => {
@@ -72,14 +83,18 @@ const contributorLines = (contributors, definitions) => definitions.map(([key, l
   return `${label}: ${hasValue(value) ? `${value}/100` : '--'}`;
 });
 
-export function buildReadinessCardSnapshot(data) {
+export function buildReadinessCardSnapshot(data, options = {}) {
+  const date = options.date || recordDate(data);
+  const headerLine = options.dashboard
+    ? `Date: ${date}`
+    : `${date}: ${displayValue(data?.score)}`;
   return snapshot('Readiness', [
     section('Readiness Summary', [`Score: ${displayValue(data?.score)}`]),
     section('Readiness Contributors', contributorLines(data?.contributors, READINESS_CONTRIBUTORS)),
     hasValue(data?.temperature_deviation)
       ? section('Temperature', [`Temperature Deviation: ${Number(data.temperature_deviation).toFixed(2)}°C`])
       : '',
-  ]);
+  ], headerLine);
 }
 
 function getSleepModel(sleepmodelData) {
@@ -96,8 +111,12 @@ function getOptimalBedtime(data, sleeptimeData) {
   return `${formatTime(start)} – ${formatTime(end)}`;
 }
 
-export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData) {
+export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, options = {}) {
   const sleepModel = getSleepModel(sleepmodelData);
+  const date = options.date || recordDate(data, sleepModel, sleeptimeData);
+  const headerLine = options.dashboard
+    ? `Date: ${date}`
+    : `${date}: ${displayValue(data?.score)}`;
   const sections = [
     section('Sleep Summary', [`Score: ${displayValue(data?.score)}`]),
     section('Sleep Contributors', contributorLines(data?.contributors, SLEEP_CONTRIBUTORS)),
@@ -135,10 +154,10 @@ export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData) {
   const bedtimeWindow = getOptimalBedtime(data, sleeptimeData);
   if (bedtimeWindow) sections.push(section('Optimal Bedtime', [`Window: ${bedtimeWindow}`]));
 
-  return snapshot('Sleep', sections);
+  return snapshot('Sleep', sections, headerLine);
 }
 
-export function buildActivityCardSnapshot(data) {
+export function buildActivityCardSnapshot(data, options = {}) {
   const high = Number(data?.high_activity_time || 0);
   const medium = Number(data?.medium_activity_time || 0);
   const low = Number(data?.low_activity_time || 0);
@@ -147,6 +166,11 @@ export function buildActivityCardSnapshot(data) {
   const equivalentDistance = hasValue(data?.equivalent_walking_distance)
     ? (Number(data.equivalent_walking_distance) / 1609.344).toFixed(2)
     : '--';
+
+  const date = options.date || recordDate(data);
+  const headerLine = options.dashboard
+    ? `Date: ${date}`
+    : `${date}: ${displayValue(data?.score)}`;
 
   return snapshot('Activity', [
     section('Activity Summary', [`Score: ${displayValue(data?.score)}`]),
@@ -164,10 +188,10 @@ export function buildActivityCardSnapshot(data) {
       `Light: ${formatDuration(low)} (${formatPercent(low / total)})`,
       `Sedentary: ${formatDuration(sedentary)} (${formatPercent(sedentary / total)})`,
     ]),
-  ]);
+  ], headerLine);
 }
 
-export function buildStressResilienceCardSnapshot(stressData, resilienceData, daytimeStressData = []) {
+export function buildStressResilienceCardSnapshot(stressData, resilienceData, daytimeStressData = [], options = {}) {
   const stressValues = daytimeStressData.map(record => Number(record.stress_value)).filter(value => Number.isFinite(value) && value > 0);
   const recoveryValues = daytimeStressData.map(record => Number(record.recovery_value)).filter(value => Number.isFinite(value) && value > 0);
   const averageStress = stressValues.length ? Math.round(stressValues.reduce((sum, value) => sum + value, 0) / stressValues.length) : null;
@@ -176,6 +200,8 @@ export function buildStressResilienceCardSnapshot(stressData, resilienceData, da
   const recoveryHigh = Number(stressData?.recovery_high || 0);
   const total = stressHigh + recoveryHigh || 1;
   const resilienceContributors = resilienceData?.contributors || {};
+
+  const date = options.date || recordDate(stressData, resilienceData, daytimeStressData[0]);
 
   return snapshot('Stress & Resilience', [
     (stressHigh > 0 || recoveryHigh > 0) ? section('Daily Stress & Recovery', [
@@ -193,12 +219,14 @@ export function buildStressResilienceCardSnapshot(stressData, resilienceData, da
       hasValue(resilienceContributors.sleep_recovery) ? `Sleep Recovery: ${Math.round(resilienceContributors.sleep_recovery)}/100` : '',
       hasValue(resilienceContributors.stress) ? `Stress Capacity: ${Math.round(resilienceContributors.stress)}/100` : '',
     ]) : '',
-  ]);
+  ], date ? `Date: ${date}` : '');
 }
 
 export function buildCardiovascularCardSnapshot(data, dateWindow = [], allData = {}, selectedDate) {
   const vascularAge = hasValue(data?.vascular_age) ? Number(data.vascular_age) : null;
   const pulseWaveVelocity = hasValue(data?.pulse_wave_velocity) ? Number(data.pulse_wave_velocity).toFixed(2) : null;
+
+  const date = selectedDate || recordDate(data);
 
   return snapshot('Cardiovascular Health', [
     section('Cardiovascular Metrics', [
@@ -210,10 +238,10 @@ export function buildCardiovascularCardSnapshot(data, dateWindow = [], allData =
       const active = date === selectedDate ? ' (selected)' : '';
       return `${date}${active}: ${hasValue(value) ? `${Number(value)} years` : 'No data'}`;
     })) : '',
-  ]);
+  ], date ? `Date: ${date}` : '');
 }
 
-export function buildBiometricsCardSnapshot(spo2Data, heartrateData = [], temperatureData = []) {
+export function buildBiometricsCardSnapshot(spo2Data, heartrateData = [], temperatureData = [], selectedDate = '') {
   const spo2 = spo2Data?.spo2_percentage?.average;
   const heartRates = heartrateData.map(record => Number(record.bpm)).filter(value => value > 0 && value < 250);
   const averageHeartRate = heartRates.length ? Math.round(heartRates.reduce((sum, value) => sum + value, 0) / heartRates.length) : null;
@@ -221,6 +249,8 @@ export function buildBiometricsCardSnapshot(spo2Data, heartrateData = [], temper
   const averageTemperature = temperatures.length
     ? (temperatures.reduce((sum, value) => sum + value, 0) / temperatures.length).toFixed(1)
     : null;
+
+  const date = selectedDate || recordDate(spo2Data, heartrateData[0], temperatureData[0]);
 
   return snapshot('Biometrics', [
     hasValue(spo2) ? section('Blood Oxygen (SpO₂)', [
@@ -241,5 +271,5 @@ export function buildBiometricsCardSnapshot(spo2Data, heartrateData = [], temper
       `Maximum: ${Math.max(...temperatures).toFixed(1)}°C`,
       `Readings: ${temperatures.length}`,
     ]) : '',
-  ]);
+  ], date ? `Date: ${date}` : '');
 }

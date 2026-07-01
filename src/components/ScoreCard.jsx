@@ -7,8 +7,10 @@ import { useToast } from '../context/toast';
 export default function ScoreCard({ label, data, trendBars, weeklyScores }) {
   const { showToast } = useToast();
   const score = data?.score ?? null;
+  const snapshotTitle = `${label} weekly scores`;
   const snapshotText = [
-    `${label} weekly scores`,
+    snapshotTitle,
+    '='.repeat(snapshotTitle.length),
     ...weeklyScores.map(({ date, score: weeklyScore }) => `${date}: ${weeklyScore ?? '--'}`),
   ].join('\n');
 
