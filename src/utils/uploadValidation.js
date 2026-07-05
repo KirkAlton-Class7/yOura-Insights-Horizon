@@ -1,7 +1,7 @@
 import { SUPPORTED_DATA_KEYS } from './datasets.js';
 
 const RESILIENCE_LEVELS = new Set(['limited', 'adequate', 'solid', 'strong', 'exceptional']);
-const STRESS_SUMMARIES = new Set(['restorative', 'normal', 'balanced', 'stressful']);
+const STRESS_SUMMARIES = new Set(['restorative', 'restored', 'normal', 'balanced', 'stressful']);
 
 const isFiniteNumber = value => (
   value !== '' && value !== null && value !== undefined && Number.isFinite(Number(value))
