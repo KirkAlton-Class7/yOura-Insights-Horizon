@@ -1,5 +1,6 @@
 import ScoreCard from './ScoreCard';
 import { getScoreColor } from '../utils/colors';
+import { calendarDates } from '../utils/dateService';
 
 export default function ScoreSummaryGrid({ appData, selectedDate, dateWindow, onSelectDate }) {
   const getTrendBars = (category) => dateWindow.map((date) => {
@@ -23,7 +24,7 @@ export default function ScoreSummaryGrid({ appData, selectedDate, dateWindow, on
           className="w-full rounded-t-sm transition-opacity"
           style={{ height: `${height}px`, backgroundColor: color, opacity: isActive ? 1 : 0.35 }}
         />
-        <div className="mt-0.5 text-[8px] text-slate-500">{new Date(date).getDate()}</div>
+        <div className="mt-0.5 text-[8px] text-slate-500">{calendarDates.getDatePresentation(date).dayOfMonth}</div>
       </div>
     );
   });

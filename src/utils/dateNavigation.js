@@ -1,25 +1,13 @@
-const DAY_MS = 86400000;
+import { calendarDates } from './dateService.js';
 
-export const groupDatesIntoWeeks = (dates) => {
-  const weekStarts = new Set();
-
-  Array.from(new Set(dates)).sort().forEach((date) => {
-    const [year, month, day] = date.split('-').map(Number);
-    const value = Date.UTC(year, month - 1, day);
-    weekStarts.add(value - new Date(value).getUTCDay() * DAY_MS);
-  });
-
-  return Array.from(weekStarts)
-    .sort((a, b) => a - b)
-    .map(weekStart => Array.from({ length: 7 }, (_, offset) => (
-      new Date(weekStart + offset * DAY_MS).toISOString().slice(0, 10)
-    )));
+export const groupDatesIntoWeeks = dates => {
+  const weekStarts = new Set(
+    Array.from(new Set(dates)).map(date => calendarDates.getWeekDates(date)[0]),
+  );
+  return Array.from(weekStarts).sort().map(weekStart => calendarDates.getWeekDates(weekStart));
 };
 
-export const getWeekday = (date) => {
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-};
+export const getWeekday = date => calendarDates.getWeekday(date);
 
 export const selectDateInWeek = (currentDate, dates) => {
   if (!dates.length) return '';

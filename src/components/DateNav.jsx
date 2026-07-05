@@ -2,31 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { calendarDates } from '../utils/dateService';
 
-const DAY_MS = 86400000;
 const controlClass = 'flex-shrink-0 w-12 rounded-xl border border-white/10 bg-slate-800/60 backdrop-blur-sm text-slate-300 transition-all hover:border-white/30 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:text-slate-300';
-const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-const toDateKey = (year, month, day) => (
-  `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-);
-
-const getMonthValue = (date) => {
-  const [year, month] = date.split('-').map(Number);
-  return new Date(year, month - 1, 1);
-};
-
-const getMonthCells = (year, month) => {
-  const firstDay = Date.UTC(year, month, 1);
-  const gridStart = firstDay - new Date(firstDay).getUTCDay() * DAY_MS;
-  return Array.from({ length: 42 }, (_, index) => (
-    new Date(gridStart + index * DAY_MS).toISOString().slice(0, 10)
-  ));
-};
+const dayNames = calendarDates.weekdayNames('short');
 
 function CalendarDate({
   date,
-  month,
+  monthKey,
   availableDateSet,
   selectedDate,
   todayDate,
@@ -34,8 +17,8 @@ function CalendarDate({
   compact = false,
   hideOutside = false,
 }) {
-  const [, monthNumber, dayNumber] = date.split('-').map(Number);
-  const isOutside = monthNumber - 1 !== month;
+  const presentation = calendarDates.getDatePresentation(date);
+  const isOutside = !calendarDates.isDateInMonth(date, monthKey);
   if (hideOutside && isOutside) return <span aria-hidden="true" />;
 
   const isAvailable = availableDateSet.has(date);
@@ -59,7 +42,7 @@ function CalendarDate({
       aria-label={date}
       aria-current={isSelected ? 'date' : undefined}
     >
-      {dayNumber}
+      {presentation.dayOfMonth}
     </button>
   );
 }
@@ -84,12 +67,9 @@ export default function DateNav({
 }) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [calendarView, setCalendarView] = useState('month');
-  const [visibleMonth, setVisibleMonth] = useState(() => getMonthValue(selectedDate));
+  const [visibleMonth, setVisibleMonth] = useState(() => calendarDates.toYearMonth(selectedDate));
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
-  const todayDate = useMemo(() => {
-    const today = new Date();
-    return toDateKey(today.getFullYear(), today.getMonth(), today.getDate());
-  }, []);
+  const todayDate = useMemo(() => calendarDates.today(), []);
 
   useEffect(() => {
     if (!isCalendarOpen) return undefined;
@@ -101,15 +81,15 @@ export default function DateNav({
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [isCalendarOpen]);
 
-  const visibleYear = visibleMonth.getFullYear();
-  const visibleMonthIndex = visibleMonth.getMonth();
+  const visibleMonthPresentation = calendarDates.getYearMonthPresentation(visibleMonth);
+  const visibleYear = visibleMonthPresentation.year;
   const monthCells = useMemo(
-    () => getMonthCells(visibleYear, visibleMonthIndex),
-    [visibleYear, visibleMonthIndex],
+    () => calendarDates.getMonthCells(visibleMonth),
+    [visibleMonth],
   );
 
   const openCalendar = () => {
-    setVisibleMonth(getMonthValue(selectedDate));
+    setVisibleMonth(calendarDates.toYearMonth(selectedDate));
     setCalendarView('month');
     setIsCalendarOpen(true);
   };
@@ -120,7 +100,7 @@ export default function DateNav({
   };
 
   const showToday = () => {
-    setVisibleMonth(getMonthValue(todayDate));
+    setVisibleMonth(calendarDates.toYearMonth(todayDate));
     setCalendarView('month');
     if (availableDateSet.has(todayDate)) selectCalendarDate(todayDate);
   };
@@ -128,8 +108,8 @@ export default function DateNav({
   const shiftCalendar = (offset) => {
     setVisibleMonth(current => (
       calendarView === 'month'
-        ? new Date(current.getFullYear(), current.getMonth() + offset, 1)
-        : new Date(current.getFullYear() + offset, current.getMonth(), 1)
+        ? calendarDates.addMonths(current, offset)
+        : calendarDates.addYears(current, offset)
     ));
   };
 
@@ -152,7 +132,7 @@ export default function DateNav({
 
           <div className="grid min-w-0 flex-1 grid-cols-7 gap-2">
             {dates.map((date) => {
-              const value = new Date(`${date}T12:00:00`);
+              const presentation = calendarDates.getDatePresentation(date);
               const isAvailable = availableDateSet.has(date);
               const isActive = isAvailable && date === selectedDate;
 
@@ -171,12 +151,12 @@ export default function DateNav({
                   }`}
                   whileHover={isAvailable ? { y: -1 } : undefined}
                   whileTap={isAvailable ? { scale: 0.96 } : undefined}
-                  aria-label={`${value.toLocaleDateString('en-US', { weekday: 'long' })}, ${date}${isAvailable ? '' : ', no data'}`}
+                  aria-label={`${presentation.weekdayLong}, ${date}${isAvailable ? '' : ', no data'}`}
                 >
                   <span className="text-xs font-medium uppercase tracking-wider">
-                    {value.toLocaleDateString('en-US', { weekday: 'short' })}
+                    {presentation.weekdayShort}
                   </span>
-                  <span className="text-lg font-outfit font-bold tabular-nums">{value.getDate()}</span>
+                  <span className="text-lg font-outfit font-bold tabular-nums">{presentation.dayOfMonth}</span>
                 </motion.button>
               );
             })}
@@ -266,7 +246,7 @@ export default function DateNav({
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="font-outfit text-3xl font-semibold text-slate-100 sm:text-4xl">
                     {calendarView === 'month'
-                      ? visibleMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                      ? calendarDates.formatMonthYear(visibleMonth)
                       : visibleYear}
                   </h2>
                   <div className="flex items-center gap-2">
@@ -310,7 +290,7 @@ export default function DateNav({
                         <CalendarDate
                           key={date}
                           date={date}
-                          month={visibleMonthIndex}
+                          monthKey={visibleMonth}
                           availableDateSet={availableDateSet}
                           selectedDate={selectedDate}
                           todayDate={todayDate}
@@ -321,10 +301,10 @@ export default function DateNav({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {Array.from({ length: 12 }, (_, month) => (
-                      <section key={month} className="rounded-2xl border border-white/10 bg-slate-950/25 p-3">
+                    {calendarDates.getYearMonths(visibleYear).map(monthKey => (
+                      <section key={monthKey} className="rounded-2xl border border-white/10 bg-slate-950/25 p-3">
                         <h3 className="mb-3 text-center font-outfit font-semibold text-slate-200">
-                          {new Date(visibleYear, month, 1).toLocaleDateString('en-US', { month: 'long' })}
+                          {calendarDates.getYearMonthPresentation(monthKey).monthName}
                         </h3>
                         <div className="grid grid-cols-7 gap-1 text-center">
                           {dayNames.map(day => (
@@ -332,11 +312,11 @@ export default function DateNav({
                               {day.slice(0, 1)}
                             </span>
                           ))}
-                          {getMonthCells(visibleYear, month).map(date => (
+                          {calendarDates.getMonthCells(monthKey).map(date => (
                             <CalendarDate
                               key={date}
                               date={date}
-                              month={month}
+                              monthKey={monthKey}
                               availableDateSet={availableDateSet}
                               selectedDate={selectedDate}
                               todayDate={todayDate}

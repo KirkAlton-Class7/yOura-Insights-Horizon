@@ -1,4 +1,5 @@
 import { SUPPORTED_DATA_KEYS } from './datasets.js';
+import { calendarDates } from './dateService.js';
 
 const RESILIENCE_LEVELS = new Set(['limited', 'adequate', 'solid', 'strong', 'exceptional']);
 const STRESS_SUMMARIES = new Set(['restorative', 'restored', 'normal', 'balanced', 'stressful']);
@@ -21,14 +22,12 @@ const isPlainObject = value => (
   value !== null && typeof value === 'object' && !Array.isArray(value)
 );
 
-const isDate = value => {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const parsed = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-};
+const isDate = value => typeof value === 'string'
+  && /^\d{4}-\d{2}-\d{2}$/.test(value)
+  && calendarDates.isValidDate(value);
 
 const isTimestamp = value => (
-  typeof value === 'string' && value.length > 0 && !Number.isNaN(Date.parse(value))
+  typeof value === 'string' && value.length > 0 && calendarDates.isValidTimestamp(value)
 );
 
 const hasValidContributors = value => (

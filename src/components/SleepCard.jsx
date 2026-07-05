@@ -5,8 +5,84 @@ import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
 import { buildSleepCardSnapshot } from '../utils/cardSnapshots';
 import UnavailableState from './UnavailableState';
+import { calendarDates } from '../utils/dateService';
+import {
+  SLEEP_DEBT_CATEGORIES,
+  calculateSleepDebt,
+  formatSleepDebt,
+  getSleepDebtMarkerPosition,
+} from '../utils/sleepDebt';
 
-export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
+function SleepDebtSection({ sleepDebt }) {
+  if (!sleepDebt) {
+    return (
+      <UnavailableState
+        title="Sleep debt unavailable"
+        description="At least five nights of sleep data within the previous 14 days are required."
+        compact
+      />
+    );
+  }
+
+  const categories = Object.values(SLEEP_DEBT_CATEGORIES);
+  const markerPosition = getSleepDebtMarkerPosition(sleepDebt.debtSeconds);
+
+  return (
+    <section className="mt-4 border-t border-white/10 pt-4" aria-label="Estimated sleep debt">
+      <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4 sm:p-5">
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">Sleep Debt</div>
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="font-outfit text-4xl font-light tabular-nums text-slate-100">
+            {formatSleepDebt(sleepDebt.debtSeconds)}
+          </span>
+          <span
+            className="font-outfit text-lg font-semibold uppercase tracking-[0.14em]"
+            style={{ color: sleepDebt.category.color }}
+          >
+            {sleepDebt.category.label}
+          </span>
+        </div>
+
+        <div className="relative mt-6" aria-hidden="true">
+          <div className="grid grid-cols-4 gap-2">
+            {categories.map(category => (
+              <div
+                key={category.label}
+                className="h-1.5 rounded-full"
+                style={{
+                  backgroundColor: category.label === sleepDebt.category.label
+                    ? category.color
+                    : 'rgba(148, 163, 184, 0.25)',
+                }}
+              />
+            ))}
+          </div>
+          <div
+            className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-slate-100 bg-slate-900 shadow-md"
+            style={{ left: `${markerPosition}%` }}
+          />
+        </div>
+        <div className="mt-3 flex justify-between text-xs text-slate-400">
+          <span>None</span>
+          <span>High</span>
+        </div>
+
+        <p className="mt-4 text-sm leading-relaxed text-slate-300">{sleepDebt.category.description}</p>
+        <p className="mt-3 text-[11px] text-slate-500">
+          Estimated from exported sleep history · Sleep need {formatSleepDebt(sleepDebt.sleepNeedSeconds)} · {sleepDebt.recentNights} nights
+        </p>
+      </div>
+    </section>
+  );
+}
+
+export default function SleepCard({
+  data,
+  sleepmodelData,
+  sleeptimeData,
+  allSleepmodelData,
+  selectedDate,
+}) {
   const { showToast } = useToast();
   const { score, contributors } = data || {};
 
@@ -14,6 +90,12 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
 
   // Sleep stage donut and hypnogram generation (similar to static version)
   const sleepModel = sleepmodelData?.find(r => r.type === 'long_sleep') || sleepmodelData?.[0] || null;
+  const sleepDate = selectedDate || data?.day || sleepModel?.day || sleeptimeData?.day;
+  const sleepHistory = allSleepmodelData || (sleepDate ? { [sleepDate]: sleepmodelData || [] } : {});
+  const sleepDebt = useMemo(
+    () => calculateSleepDebt(sleepHistory, sleepDate),
+    [sleepHistory, sleepDate],
+  );
 
   const stagesHtml = useMemo(() => {
     if (!sleepModel) return null;
@@ -103,8 +185,8 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
             {blocks}
           </div>
           <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-            <span>{new Date(sleepModel.bedtime_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            <span>{new Date(sleepModel.bedtime_end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span>{calendarDates.formatTimestampTime(sleepModel.bedtime_start)}</span>
+            <span>{calendarDates.formatTimestampTime(sleepModel.bedtime_end)}</span>
           </div>
         </div>
       );
@@ -115,16 +197,23 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
     const avgHRV = sleepModel.average_hrv ? Number(sleepModel.average_hrv).toFixed(0) : '--';
     const avgBr = sleepModel.average_breath ? Number(sleepModel.average_breath).toFixed(1) : '--';
     const loHR = sleepModel.lowest_heart_rate || '--';
+    const restingHR = sleepModel.resting_heart_rate || sleepModel.lowest_heart_rate || '--';
     const eff = sleepModel.efficiency ? Number(sleepModel.efficiency) + '%' : '--';
+    const timeInBed = Number(sleepModel.time_in_bed || 0);
 
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="mb-3 text-xs text-slate-500 uppercase tracking-wider">Sleep Stages</div>
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div dangerouslySetInnerHTML={{ __html: donutSVG }} />
           <div className="flex-1 space-y-1">{legend}</div>
         </div>
         {hypnoHtml}
-        <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
+        <div className="mt-5 text-xs text-slate-500 uppercase tracking-wider">Key Metrics</div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4 mt-3 text-xs sm:grid-cols-3">
+          <div><span className="text-slate-500">Total Sleep</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{fmtDuration(total)}</span></div>
+          <div><span className="text-slate-500">Time in Bed</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{fmtDuration(timeInBed)}</span></div>
+          <div><span className="text-slate-500">Resting HR</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{restingHR} bpm</span></div>
           <div><span className="text-slate-500">Avg HR</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgHR} bpm</span></div>
           <div><span className="text-slate-500">Lowest HR</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{loHR} bpm</span></div>
           <div><span className="text-slate-500">Avg HRV</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgHRV} ms</span></div>
@@ -140,17 +229,13 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
   const bedtimeWindow = useMemo(() => {
     const day = data?.day || sleeptimeData?.day;
     if (!day || !sleeptimeData?.optimal_bedtime) return null;
-    const ob = sleeptimeData.optimal_bedtime;
-    const tz = ob.day_tz || 0;
-    const midnightMs = new Date(day + 'T00:00:00Z').getTime() - tz * 1000;
-    const startMs = midnightMs + (ob.start_offset || 0) * 1000;
-    const endMs = midnightMs + (ob.end_offset || 0) * 1000;
-    const fmt = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const window = calendarDates.formatOptimalBedtime(day, sleeptimeData.optimal_bedtime);
+    if (!window) return null;
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
         <div className="text-xs text-slate-500 uppercase tracking-wider">Optimal Bedtime Window</div>
         <div className="flex gap-4 mt-1">
-          <span className="text-sm text-purple-300">{fmt(startMs)} – {fmt(endMs)}</span>
+          <span className="text-sm text-purple-300">{window}</span>
         </div>
       </div>
     );
@@ -162,7 +247,10 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
     <Card
       title="Sleep"
       subtitle="Sleep score and contributors"
-      snapshotText={hasAnySleepData ? buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData) : undefined}
+      snapshotText={hasAnySleepData ? buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, {
+        allSleepmodelData: sleepHistory,
+        date: sleepDate,
+      }) : undefined}
       snapshotLabel="Sleep snapshot"
       onCopyFailure={() => showToast('Failed to copy Sleep snapshot.')}
       onCopySuccess={() => showToast('Sleep snapshot copied to clipboard.')}
@@ -190,6 +278,7 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
         {stagesHtml || (
           <UnavailableState title="Sleep stages and HR unavailable" description="No sleep-model data was available for this date." compact />
         )}
+        <SleepDebtSection sleepDebt={sleepDebt} />
         {bedtimeWindow || (
           <UnavailableState title="Optimal bedtime unavailable" description="No optimal-bedtime data was available for this date." compact />
         )}

@@ -1,4 +1,6 @@
 import { formatWearDuration, getWearCoverage } from './wearCoverage.js';
+import { calendarDates } from './dateService.js';
+import { calculateSleepDebt, formatSleepDebt } from './sleepDebt.js';
 
 const READINESS_CONTRIBUTORS = [
   ['hrv_balance', 'HRV Balance'],
@@ -53,11 +55,7 @@ export function formatDuration(seconds) {
 
 const formatPercent = value => `${Math.round(Number(value || 0) * 100)}%`;
 
-const formatTime = value => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '--';
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
+const formatTime = value => calendarDates.formatTimestampTime(value);
 
 const recordDate = (...records) => {
   const record = records.find(Boolean);
@@ -106,12 +104,7 @@ function getSleepModel(sleepmodelData) {
 function getOptimalBedtime(data, sleeptimeData) {
   const day = data?.day || sleeptimeData?.day;
   if (!day || !sleeptimeData?.optimal_bedtime) return null;
-  const bedtime = sleeptimeData.optimal_bedtime;
-  const timezoneOffset = Number(bedtime.day_tz || 0);
-  const midnight = new Date(`${day}T00:00:00Z`).getTime() - timezoneOffset * 1000;
-  const start = midnight + Number(bedtime.start_offset || 0) * 1000;
-  const end = midnight + Number(bedtime.end_offset || 0) * 1000;
-  return `${formatTime(start)} – ${formatTime(end)}`;
+  return calendarDates.formatOptimalBedtime(day, sleeptimeData.optimal_bedtime);
 }
 
 export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, options = {}) {
@@ -146,7 +139,10 @@ export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, opti
         : '',
     ]));
 
-    sections.push(section('Sleep HR', [
+    sections.push(section('Key Metrics', [
+      `Total Sleep: ${formatDuration(asleep)}`,
+      `Time in Bed: ${formatDuration(sleepModel.time_in_bed)}`,
+      `Resting Heart Rate: ${displayValue(sleepModel.resting_heart_rate || sleepModel.lowest_heart_rate)} bpm`,
       `Lowest Heart Rate: ${displayValue(sleepModel.lowest_heart_rate)} bpm`,
       `Average Heart Rate: ${hasValue(sleepModel.average_heart_rate) ? Number(sleepModel.average_heart_rate).toFixed(0) : '--'} bpm`,
       `Heart Rate Variability (HRV): ${hasValue(sleepModel.average_hrv) ? Number(sleepModel.average_hrv).toFixed(0) : '--'} ms`,
@@ -157,6 +153,18 @@ export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, opti
   } else {
     sections.push(section('Sleep Stages and HR', ['Status: No sleep-model data available']));
   }
+
+  const sleepHistory = options.allSleepmodelData || (date ? { [date]: sleepmodelData || [] } : {});
+  const sleepDebt = calculateSleepDebt(sleepHistory, date);
+  sections.push(section('Sleep Debt', sleepDebt ? [
+    `Estimated Debt: ${formatSleepDebt(sleepDebt.debtSeconds)}`,
+    `Category: ${sleepDebt.category.label}`,
+    `Estimated Sleep Need: ${formatSleepDebt(sleepDebt.sleepNeedSeconds)}`,
+    `Recent Nights: ${sleepDebt.recentNights}`,
+    sleepDebt.category.description,
+  ] : [
+    'Status: At least five nights of sleep data within the previous 14 days are required.',
+  ]));
 
   const bedtimeWindow = getOptimalBedtime(data, sleeptimeData);
   sections.push(section('Optimal Bedtime', [

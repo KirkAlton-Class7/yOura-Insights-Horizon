@@ -7,6 +7,7 @@ import {
   buildStressResilienceCardSnapshot,
   buildWearCoverageCardSnapshot,
 } from './cardSnapshots.js';
+import { calendarDates } from './dateService.js';
 
 export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
   const sections = [];
@@ -24,7 +25,11 @@ export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
   const temperatureData = appData.temperature?.[selectedDate] || [];
 
   if (readinessData) sections.push(buildReadinessCardSnapshot(readinessData, { date: selectedDate, dashboard: true }));
-  if (sleepData) sections.push(buildSleepCardSnapshot(sleepData, sleepmodelData, sleeptimeData, { date: selectedDate, dashboard: true }));
+  if (sleepData) sections.push(buildSleepCardSnapshot(sleepData, sleepmodelData, sleeptimeData, {
+    allSleepmodelData: appData.sleepmodel,
+    date: selectedDate,
+    dashboard: true,
+  }));
   if (activityData) sections.push(buildActivityCardSnapshot(activityData, { date: selectedDate, dashboard: true }));
   if (activityData?.non_wear_time !== null && activityData?.non_wear_time !== undefined && activityData?.non_wear_time !== '') {
     sections.push(buildWearCoverageCardSnapshot(activityData, selectedDate));
@@ -55,6 +60,6 @@ export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
   return [
     `Oura Insights Dashboard Snapshot\n================================\nDate: ${selectedDate}`,
     ...sections,
-    `================================\nSnapshot generated: ${new Date().toLocaleString()}`,
+    `================================\nSnapshot generated: ${calendarDates.formatCurrentDateTime()}`,
   ].join('\n\n');
 }

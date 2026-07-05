@@ -202,7 +202,13 @@ export default function OuraDashboard() {
               <ReadinessCard data={readinessData} />
             </section>
             <section id="sleep" className="scroll-mt-20">
-              <SleepCard data={sleepData} sleepmodelData={sleepmodelData} sleeptimeData={sleeptimeData} />
+              <SleepCard
+                data={sleepData}
+                sleepmodelData={sleepmodelData}
+                sleeptimeData={sleeptimeData}
+                allSleepmodelData={appData.sleepmodel}
+                selectedDate={selectedDate}
+              />
             </section>
             <section id="activity" className="scroll-mt-20">
               <ActivityCard data={activityData} />
