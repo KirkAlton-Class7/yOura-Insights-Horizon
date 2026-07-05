@@ -102,10 +102,11 @@ function getSleepModel(sleepmodelData) {
 }
 
 function getOptimalBedtime(data, sleeptimeData) {
-  if (!data?.day || !sleeptimeData?.optimal_bedtime) return null;
+  const day = data?.day || sleeptimeData?.day;
+  if (!day || !sleeptimeData?.optimal_bedtime) return null;
   const bedtime = sleeptimeData.optimal_bedtime;
   const timezoneOffset = Number(bedtime.day_tz || 0);
-  const midnight = new Date(`${data.day}T00:00:00Z`).getTime() - timezoneOffset * 1000;
+  const midnight = new Date(`${day}T00:00:00Z`).getTime() - timezoneOffset * 1000;
   const start = midnight + Number(bedtime.start_offset || 0) * 1000;
   const end = midnight + Number(bedtime.end_offset || 0) * 1000;
   return `${formatTime(start)} – ${formatTime(end)}`;
@@ -117,9 +118,11 @@ export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, opti
   const headerLine = options.dashboard
     ? `Date: ${date}`
     : `${date}: ${displayValue(data?.score)}`;
-  const sections = [
-    section('Sleep Summary', [`Score: ${displayValue(data?.score)}`]),
-    section('Sleep Contributors', contributorLines(data?.contributors, SLEEP_CONTRIBUTORS)),
+  const sections = data ? [
+    section('Sleep Summary', [`Score: ${displayValue(data.score)}`]),
+    section('Sleep Contributors', contributorLines(data.contributors, SLEEP_CONTRIBUTORS)),
+  ] : [
+    section('Sleep Summary', ['Status: No daily sleep score or contributors available']),
   ];
 
   if (sleepModel) {
@@ -149,10 +152,14 @@ export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, opti
       `Sleep Efficiency: ${hasValue(sleepModel.efficiency) ? `${Number(sleepModel.efficiency)}%` : '--'}`,
       `Restlessness: ${displayValue(sleepModel.restless_periods)}`,
     ]));
+  } else {
+    sections.push(section('Sleep Stages and HR', ['Status: No sleep-model data available']));
   }
 
   const bedtimeWindow = getOptimalBedtime(data, sleeptimeData);
-  if (bedtimeWindow) sections.push(section('Optimal Bedtime', [`Window: ${bedtimeWindow}`]));
+  sections.push(section('Optimal Bedtime', [
+    bedtimeWindow ? `Window: ${bedtimeWindow}` : 'Status: No optimal-bedtime data available',
+  ]));
 
   return snapshot('Sleep', sections, headerLine);
 }
@@ -207,18 +214,18 @@ export function buildStressResilienceCardSnapshot(stressData, resilienceData, da
     (stressHigh > 0 || recoveryHigh > 0) ? section('Daily Stress & Recovery', [
       `Stress: ${formatDuration(stressHigh)} (${formatPercent(stressHigh / total)})`,
       `Recovery: ${formatDuration(recoveryHigh)} (${formatPercent(recoveryHigh / total)})`,
-    ]) : '',
+    ]) : !stressData ? section('Daily Stress & Recovery', ['Status: No daily stress data available']) : '',
     (averageStress !== null || averageRecovery !== null) ? section('Daytime Averages', [
       averageStress !== null ? `Average Stress: ${averageStress}` : '',
       averageRecovery !== null ? `Average Recovery: ${averageRecovery}` : '',
-    ]) : '',
+    ]) : section('Daytime Averages', ['Status: No daytime stress readings available']),
     stressData?.day_summary ? section('Day Summary', [`Status: ${capitalize(stressData.day_summary)}`]) : '',
     resilienceData ? section('Resilience', [
       `Status: ${capitalize(resilienceData.level)}`,
       hasValue(resilienceContributors.daytime_recovery) ? `Daytime Recovery: ${Math.round(resilienceContributors.daytime_recovery)}/100` : '',
       hasValue(resilienceContributors.sleep_recovery) ? `Sleep Recovery: ${Math.round(resilienceContributors.sleep_recovery)}/100` : '',
       hasValue(resilienceContributors.stress) ? `Stress Capacity: ${Math.round(resilienceContributors.stress)}/100` : '',
-    ]) : '',
+    ]) : section('Resilience', ['Status: No resilience data available']),
   ], date ? `Date: ${date}` : '');
 }
 
@@ -232,12 +239,15 @@ export function buildCardiovascularCardSnapshot(data, dateWindow = [], allData =
     section('Cardiovascular Metrics', [
       vascularAge !== null ? `Vascular Age: ${vascularAge} years` : '',
       pulseWaveVelocity !== null ? `Pulse Wave Velocity: ${pulseWaveVelocity} m/s` : '',
+      vascularAge === null && pulseWaveVelocity === null ? 'Status: No cardiovascular metrics available' : '',
     ]),
-    dateWindow.length ? section('7-Day Vascular Age Trend', dateWindow.map(date => {
+    dateWindow.length && dateWindow.some(date => hasValue(allData?.[date]?.[0]?.vascular_age))
+      ? section('7-Day Vascular Age Trend', dateWindow.map(date => {
       const value = allData?.[date]?.[0]?.vascular_age;
       const active = date === selectedDate ? ' (selected)' : '';
       return `${date}${active}: ${hasValue(value) ? `${Number(value)} years` : 'No data'}`;
-    })) : '',
+      }))
+      : section('7-Day Vascular Age Trend', ['Status: No cardiovascular-age data available for this week']),
   ], date ? `Date: ${date}` : '');
 }
 
@@ -258,18 +268,18 @@ export function buildBiometricsCardSnapshot(spo2Data, heartrateData = [], temper
       hasValue(spo2Data?.breathing_disturbance_index)
         ? `Breathing Disturbance: ${spo2Data.breathing_disturbance_index}`
         : '',
-    ]) : '',
+    ]) : section('Blood Oxygen (SpO₂)', ['Status: No SpO₂ data available']),
     averageHeartRate !== null ? section('Heart Rate', [
       `Average: ${averageHeartRate} bpm`,
       `Minimum: ${Math.min(...heartRates)} bpm`,
       `Maximum: ${Math.max(...heartRates)} bpm`,
       `Readings: ${heartRates.length}`,
-    ]) : '',
+    ]) : section('Heart Rate', ['Status: No heart-rate readings available']),
     averageTemperature !== null ? section('Skin Temperature', [
       `Average: ${averageTemperature}°C`,
       `Minimum: ${Math.min(...temperatures).toFixed(1)}°C`,
       `Maximum: ${Math.max(...temperatures).toFixed(1)}°C`,
       `Readings: ${temperatures.length}`,
-    ]) : '',
+    ]) : section('Skin Temperature', ['Status: No temperature readings available']),
   ], date ? `Date: ${date}` : '');
 }

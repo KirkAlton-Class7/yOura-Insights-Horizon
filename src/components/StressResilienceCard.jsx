@@ -3,6 +3,7 @@ import SubScoreBar from './SubScoreBar';
 import { useToast } from '../context/toast';
 import { getStatusColor, SEMANTIC_COLORS } from '../utils/colors';
 import { buildStressResilienceCardSnapshot } from '../utils/cardSnapshots';
+import UnavailableState from './UnavailableState';
 
 export default function StressResilienceCard({ stressData, resilienceData, daytimeStressData }) {
   const { showToast } = useToast();
@@ -13,10 +14,10 @@ export default function StressResilienceCard({ stressData, resilienceData, dayti
   const avgStress = stressVals.length ? Math.round(stressVals.reduce((a, b) => a + b, 0) / stressVals.length) : null;
   const avgRecov = recovVals.length ? Math.round(recovVals.reduce((a, b) => a + b, 0) / recovVals.length) : null;
 
-  if (!stressData && !resilienceData && !avgStress) {
+  if (!stressData && !resilienceData && avgStress === null && avgRecov === null) {
     return (
-      <Card title="Stress & Resilience" subtitle="No data available" onCopyFailure={() => showToast('No data to copy')}>
-        <div className="text-slate-400 text-center py-8">No stress or resilience data for this date</div>
+      <Card title="Stress & Resilience" subtitle="Daily stress, recovery, and resilience">
+        <UnavailableState title="Stress and resilience unavailable" />
       </Card>
     );
   }
@@ -50,6 +51,9 @@ export default function StressResilienceCard({ stressData, resilienceData, dayti
       onCopySuccess={() => showToast('Stress & Resilience snapshot copied to clipboard.')}
     >
       <div className="space-y-4">
+        {!stressData && (
+          <UnavailableState title="Daily stress unavailable" description="No daily stress or recovery summary was available for this date." compact />
+        )}
         {(stressHigh > 0 || recovHigh > 0) && (
           <div className="space-y-2">
             <div className="flex items-center gap-3">
@@ -79,6 +83,9 @@ export default function StressResilienceCard({ stressData, resilienceData, dayti
             )}
           </div>
         )}
+        {avgStress === null && avgRecov === null && (
+          <UnavailableState title="Daytime averages unavailable" description="No daytime stress readings were available for this date." compact />
+        )}
 
         {daySummary && (
           <div className="flex items-center gap-2">
@@ -105,6 +112,9 @@ export default function StressResilienceCard({ stressData, resilienceData, dayti
               )}
             </div>
           </div>
+        )}
+        {!resilienceData && (
+          <UnavailableState title="Resilience unavailable" description="No resilience level or contributors were available for this date." compact />
         )}
       </div>
     </Card>

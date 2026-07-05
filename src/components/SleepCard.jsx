@@ -4,6 +4,7 @@ import SubScoreBar from './SubScoreBar';
 import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
 import { buildSleepCardSnapshot } from '../utils/cardSnapshots';
+import UnavailableState from './UnavailableState';
 
 export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
   const { showToast } = useToast();
@@ -137,10 +138,11 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
 
   // Optimal bedtime window
   const bedtimeWindow = useMemo(() => {
-    if (!data?.day || !sleeptimeData?.optimal_bedtime) return null;
+    const day = data?.day || sleeptimeData?.day;
+    if (!day || !sleeptimeData?.optimal_bedtime) return null;
     const ob = sleeptimeData.optimal_bedtime;
     const tz = ob.day_tz || 0;
-    const midnightMs = new Date(data.day + 'T00:00:00Z').getTime() - tz * 1000;
+    const midnightMs = new Date(day + 'T00:00:00Z').getTime() - tz * 1000;
     const startMs = midnightMs + (ob.start_offset || 0) * 1000;
     const endMs = midnightMs + (ob.end_offset || 0) * 1000;
     const fmt = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -154,33 +156,43 @@ export default function SleepCard({ data, sleepmodelData, sleeptimeData }) {
     );
   }, [sleeptimeData, data]);
 
-  if (!data) return null;
+  const hasAnySleepData = Boolean(data || sleepModel || sleeptimeData?.optimal_bedtime);
 
   return (
     <Card
       title="Sleep"
       subtitle="Sleep score and contributors"
-      snapshotText={buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData)}
+      snapshotText={hasAnySleepData ? buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData) : undefined}
       snapshotLabel="Sleep snapshot"
       onCopyFailure={() => showToast('Failed to copy Sleep snapshot.')}
       onCopySuccess={() => showToast('Sleep snapshot copied to clipboard.')}
     >
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-slate-400">Score</span>
-          <span className="text-2xl font-outfit font-bold tabular-nums" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {keys.map((key) => (
-            <SubScoreBar
-              key={key}
-              label={key.replace(/_/g, ' ')}
-              value={contributors?.[key]}
-            />
-          ))}
-        </div>
-        {stagesHtml}
-        {bedtimeWindow}
+        {data ? (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-400">Score</span>
+              <span className="text-2xl font-outfit font-bold tabular-nums" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {keys.map((key) => (
+                <SubScoreBar
+                  key={key}
+                  label={key.replace(/_/g, ' ')}
+                  value={contributors?.[key]}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <UnavailableState title="Sleep summary unavailable" description="No daily sleep score or contributors were available for this date." />
+        )}
+        {stagesHtml || (
+          <UnavailableState title="Sleep stages and HR unavailable" description="No sleep-model data was available for this date." compact />
+        )}
+        {bedtimeWindow || (
+          <UnavailableState title="Optimal bedtime unavailable" description="No optimal-bedtime data was available for this date." compact />
+        )}
       </div>
     </Card>
   );

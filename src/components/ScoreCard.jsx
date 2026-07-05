@@ -7,6 +7,7 @@ import { useToast } from '../context/toast';
 export default function ScoreCard({ label, data, trendBars, weeklyScores }) {
   const { showToast } = useToast();
   const score = data?.score ?? null;
+  const hasScore = score !== null && score !== undefined && score !== '' && Number.isFinite(Number(score));
   const snapshotTitle = `${label} weekly scores`;
   const snapshotText = [
     snapshotTitle,
@@ -49,6 +50,9 @@ export default function ScoreCard({ label, data, trendBars, weeklyScores }) {
         </button>
       </div>
       <ScoreRing score={score} size={130} />
+      {!hasScore && (
+        <p className="-mt-2 text-center text-xs text-slate-500">No {label.toLowerCase()} score available for this date</p>
+      )}
       <div className="flex items-end gap-1 w-full h-8">
         {trendBars}
       </div>

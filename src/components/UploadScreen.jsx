@@ -2,24 +2,15 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { Upload } from 'lucide-react';
-import { parseCSV, dateKey } from '../utils/csvParser';
+import { parseCSV, parseCSVLine, dateKey } from '../utils/csvParser';
 import { validateDashboardData } from '../utils/uploadValidation';
+import {
+  DATASET_DEFINITIONS,
+  FILE_MAP,
+  PRIMARY_FILE_KEYS,
+  getUnavailableDatasets,
+} from '../utils/datasets';
 import { useToast } from '../context/toast';
-
-const FILE_MAP = {
-  'dailyactivity': 'activity',
-  'dailyreadiness': 'readiness',
-  'dailysleep': 'sleep',
-  'dailyspo2': 'spo2',
-  'heartrate': 'heartrate',
-  'temperature': 'temperature',
-  'sleeptime': 'sleeptime',
-  'dailystress': 'stress',
-  'dailyresilience': 'resilience',
-  'daytimestress': 'daytimestress',
-  'dailycardiovascularage': 'cardiovascularage',
-  'sleepmodel': 'sleepmodel'
-};
 
 export default function UploadScreen({ onDataLoaded }) {
   const { showToast } = useToast();
@@ -31,7 +22,7 @@ export default function UploadScreen({ onDataLoaded }) {
     const nextData = { ...parsedData };
 
     for (const file of acceptedFiles) {
-      const baseName = file.name.replace('.csv', '').replace(/\s/g, '').toLowerCase();
+      const baseName = file.name.replace(/\.csv$/i, '').replace(/[^a-z0-9]/gi, '').toLowerCase();
       const key = Object.keys(FILE_MAP).find(k => baseName.includes(k));
       if (!key) continue;
 
@@ -39,6 +30,17 @@ export default function UploadScreen({ onDataLoaded }) {
         const text = await file.text();
         const rows = parseCSV(text);
         const dataKey = FILE_MAP[key];
+
+        if (rows.length === 0) {
+          const headers = parseCSVLine(text.trim().split(/\r?\n/)[0] || '')
+            .map(header => header.replace(/^\uFEFF/, '').trim().toLowerCase());
+          const hasDateHeader = headers.includes('day') || headers.includes('timestamp');
+          if (!hasDateHeader) throw new Error(`${file.name} does not contain a recognized CSV header.`);
+
+          nextData[dataKey] = {};
+          newLoaded[key] = 'empty';
+          continue;
+        }
 
         const grouped = {};
         for (const row of rows) {
@@ -48,12 +50,12 @@ export default function UploadScreen({ onDataLoaded }) {
           grouped[d].push(row);
         }
 
-        if (rows.length === 0 || Object.keys(grouped).length === 0) {
+        if (Object.keys(grouped).length === 0) {
           throw new Error(`${file.name} contains no valid dated records.`);
         }
 
         nextData[dataKey] = grouped;
-        newLoaded[key] = true;
+        newLoaded[key] = 'loaded';
       } catch (error) {
         console.error(`Failed to process ${file.name}:`, error);
         delete newLoaded[key];
@@ -76,37 +78,40 @@ export default function UploadScreen({ onDataLoaded }) {
     multiple: true,
   });
 
-  const fileList = Object.keys(FILE_MAP).map(key => ({
-    key,
-    label: `${key}.csv`,
-    loaded: loadedFiles[key] || false,
+  const fileList = DATASET_DEFINITIONS.map(definition => ({
+    ...definition,
+    label: `${definition.fileKey}.csv`,
+    status: loadedFiles[definition.fileKey] || 'missing',
   }));
-  const requiredFiles = Object.keys(FILE_MAP);
-  const isReady = requiredFiles.every(key => loadedFiles[key]);
+  const isReady = PRIMARY_FILE_KEYS.some(key => loadedFiles[key] === 'loaded');
 
   const handleGenerate = async () => {
     if (!isReady) {
       showToast({
-        title: 'Missing Required Files',
-        message: 'Please upload all 12 required CSV files before attempting to generate the dashboard.',
+        title: 'Primary Data Required',
+        message: 'Please upload at least one nonempty primary file: dailyreadiness.csv, dailysleep.csv, or dailyactivity.csv.',
         type: 'error',
       });
       return;
     }
 
     try {
-      const hasCompleteData = Object.values(FILE_MAP).every(
-        dataKey => parsedData[dataKey] && Object.keys(parsedData[dataKey]).length > 0,
-      );
-      if (!hasCompleteData) throw new Error('One or more required datasets are empty.');
       validateDashboardData(parsedData);
 
       await onDataLoaded(parsedData);
+      const unavailable = getUnavailableDatasets(parsedData);
+      if (unavailable.length > 0) {
+        showToast({
+          title: 'Partial Dashboard Generated',
+          message: `No data available for: ${unavailable.map(({ label }) => label).join(', ')}.`,
+          type: 'warning',
+        });
+      }
     } catch (error) {
       console.error('Dashboard generation failed:', error);
       showToast({
         title: 'Unable to Generate Dashboard',
-        message: "The dashboard couldn't be generated. Please verify that all required CSV files are valid and complete, then try again.",
+        message: "The dashboard couldn't be generated. Please verify that the uploaded CSV files are valid, then try again.",
         type: 'error',
       });
     }
@@ -154,19 +159,28 @@ export default function UploadScreen({ onDataLoaded }) {
         </p>
         <p className="text-sm text-slate-400 mt-1">or click to browse</p>
         <div className="mt-4 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-medium text-amber-200">
-          All 12 exported files are required to generate the dashboard
+          At least one exported file is required to generate the dashboard
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-6 text-left">
-          {fileList.map(({ key, label, loaded }) => (
+          {fileList.map(({ fileKey, label, primary, status }) => (
             <div
-              key={key}
+              key={fileKey}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                loaded ? 'bg-cyan-400/10 text-cyan-400' : 'bg-white/5 text-slate-400'
+                status === 'loaded'
+                  ? 'bg-cyan-400/10 text-cyan-400'
+                  : status === 'empty'
+                    ? 'bg-amber-400/10 text-amber-300'
+                    : 'bg-white/5 text-slate-400'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${loaded ? 'bg-cyan-400' : 'bg-slate-600'}`} />
-              {label}
+              <span className={`w-2 h-2 rounded-full ${
+                status === 'loaded' ? 'bg-cyan-400' : status === 'empty' ? 'bg-amber-400' : 'bg-slate-600'
+              }`} />
+              <span className="min-w-0 flex-1 truncate">{label}</span>
+              <span className="text-[10px] uppercase tracking-wide opacity-70">
+                {status === 'loaded' ? 'Ready' : status === 'empty' ? 'No data' : primary ? 'Primary' : 'Optional'}
+              </span>
             </div>
           ))}
         </div>

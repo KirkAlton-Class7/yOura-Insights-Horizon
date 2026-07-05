@@ -3,10 +3,17 @@ import SubScoreBar from './SubScoreBar';
 import { getScoreColor, SEMANTIC_COLORS } from '../utils/colors';
 import { buildReadinessCardSnapshot } from '../utils/cardSnapshots';
 import { useToast } from '../context/toast';
+import UnavailableState from './UnavailableState';
 
 export default function ReadinessCard({ data }) {
   const { showToast } = useToast();
-  if (!data) return null;
+  if (!data) {
+    return (
+      <Card title="Readiness" subtitle="Daily readiness and contributors">
+        <UnavailableState title="Readiness unavailable" />
+      </Card>
+    );
+  }
   const { score, contributors, temperature_deviation } = data;
   const keys = ['hrv_balance', 'resting_heart_rate', 'recovery_index', 'body_temperature', 'previous_night', 'previous_day_activity', 'sleep_balance', 'activity_balance', 'sleep_regularity'];
   const temperatureColor = Number(temperature_deviation) > 0.5

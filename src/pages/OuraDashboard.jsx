@@ -18,21 +18,7 @@ import { buildDashboardSnapshot } from '../utils/snapshot';
 import { writeClipboardText } from '../utils/clipboard';
 import { useToast } from '../context/toast';
 import { useDateNavigation } from '../hooks/useDateNavigation';
-
-const REQUIRED_DATA_KEYS = [
-  'activity',
-  'readiness',
-  'sleep',
-  'spo2',
-  'heartrate',
-  'temperature',
-  'sleeptime',
-  'stress',
-  'resilience',
-  'daytimestress',
-  'cardiovascularage',
-  'sleepmodel',
-];
+import { PRIMARY_DATA_KEYS, hasDatedRecords } from '../utils/datasets';
 
 export default function OuraDashboard() {
   const { showToast } = useToast();
@@ -93,16 +79,14 @@ export default function OuraDashboard() {
   }, []);
 
   const handleDataLoaded = useCallback((data) => {
-    const hasAllRequiredData = REQUIRED_DATA_KEYS.every(
-      key => data[key] && Object.keys(data[key]).length > 0,
-    );
-    if (!hasAllRequiredData) {
-      throw new Error('Required dashboard data is missing or empty.');
+    const hasPrimaryData = PRIMARY_DATA_KEYS.some(key => hasDatedRecords(data[key]));
+    if (!hasPrimaryData) {
+      throw new Error('At least one primary dataset is required.');
     }
 
     const allDates = new Set();
-    ['activity', 'readiness', 'sleep', 'spo2', 'stress', 'resilience', 'cardiovascularage'].forEach(k => {
-      Object.keys(data[k] || {}).forEach(d => allDates.add(d));
+    Object.values(data).forEach(groupedData => {
+      Object.keys(groupedData || {}).forEach(date => allDates.add(date));
     });
     const sorted = Array.from(allDates).sort();
     if (sorted.length === 0) {

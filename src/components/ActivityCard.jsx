@@ -3,10 +3,17 @@ import SubScoreBar from './SubScoreBar';
 import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
 import { buildActivityCardSnapshot } from '../utils/cardSnapshots';
+import UnavailableState from './UnavailableState';
 
 export default function ActivityCard({ data }) {
   const { showToast } = useToast();
-  if (!data) return null;
+  if (!data) {
+    return (
+      <Card title="Activity" subtitle="Activity score and breakdown">
+        <UnavailableState title="Activity unavailable" />
+      </Card>
+    );
+  }
   const { score, contributors } = data;
 
   const keys = ['meet_daily_targets', 'move_every_hour', 'recovery_time', 'stay_active', 'training_frequency', 'training_volume'];
