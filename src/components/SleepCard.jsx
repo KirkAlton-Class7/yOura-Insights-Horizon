@@ -91,7 +91,10 @@ export default function SleepCard({
   // Sleep stage donut and hypnogram generation (similar to static version)
   const sleepModel = sleepmodelData?.find(r => r.type === 'long_sleep') || sleepmodelData?.[0] || null;
   const sleepDate = selectedDate || data?.day || sleepModel?.day || sleeptimeData?.day;
-  const sleepHistory = allSleepmodelData || (sleepDate ? { [sleepDate]: sleepmodelData || [] } : {});
+  const sleepHistory = useMemo(
+    () => allSleepmodelData || (sleepDate ? { [sleepDate]: sleepmodelData || [] } : {}),
+    [allSleepmodelData, sleepDate, sleepmodelData],
+  );
   const sleepDebt = useMemo(
     () => calculateSleepDebt(sleepHistory, sleepDate),
     [sleepHistory, sleepDate],
@@ -241,7 +244,7 @@ export default function SleepCard({
     );
   }, [sleeptimeData, data]);
 
-  const hasAnySleepData = Boolean(data || sleepModel || sleeptimeData?.optimal_bedtime);
+  const hasAnySleepData = Boolean(data || sleepModel || sleepDebt || sleeptimeData?.optimal_bedtime);
 
   return (
     <Card

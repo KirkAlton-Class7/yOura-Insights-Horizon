@@ -25,7 +25,7 @@ export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
   const temperatureData = appData.temperature?.[selectedDate] || [];
 
   if (readinessData) sections.push(buildReadinessCardSnapshot(readinessData, { date: selectedDate, dashboard: true }));
-  if (sleepData) sections.push(buildSleepCardSnapshot(sleepData, sleepmodelData, sleeptimeData, {
+  if (sleepData || sleepmodelData.length || sleeptimeData) sections.push(buildSleepCardSnapshot(sleepData, sleepmodelData, sleeptimeData, {
     allSleepmodelData: appData.sleepmodel,
     date: selectedDate,
     dashboard: true,

@@ -49,7 +49,7 @@ test('sleep debt category boundaries match the four defined bands', () => {
 
 test('all sleep sessions for a day contribute to total sleep', () => {
   const history = {
-    '2026-06-29': [sleepRecord(420), sleepRecord(60)],
+    '2026-06-29': [sleepRecord(420), { type: 'short_sleep', total_sleep_duration: 60 * 60 }],
     '2026-06-30': [sleepRecord(480)],
     '2026-07-01': [sleepRecord(480)],
     '2026-07-02': [sleepRecord(480)],

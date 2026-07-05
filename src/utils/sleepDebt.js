@@ -5,6 +5,7 @@ const HOUR_SECONDS = 60 * 60;
 const MINIMUM_RECENT_NIGHTS = 5;
 const DEBT_WINDOW_DAYS = 14;
 const BASELINE_WINDOW_DAYS = 90;
+const DEBT_DISPLAY_INCREMENT_SECONDS = 5 * 60;
 
 export const SLEEP_DEBT_CATEGORIES = Object.freeze({
   none: Object.freeze({
@@ -29,23 +30,36 @@ export const SLEEP_DEBT_CATEGORIES = Object.freeze({
   }),
 });
 
-const hasFiniteDuration = value => Number.isFinite(Number(value)) && Number(value) >= 0;
+const hasFiniteDuration = value => (
+  value !== ''
+  && value !== null
+  && value !== undefined
+  && Number.isFinite(Number(value))
+  && Number(value) >= 0
+);
+
+const hasValidSessionDuration = record => (
+  hasFiniteDuration(record?.total_sleep_duration)
+  || (
+    hasFiniteDuration(record?.deep_sleep_duration)
+    && hasFiniteDuration(record?.rem_sleep_duration)
+    && hasFiniteDuration(record?.light_sleep_duration)
+  )
+);
 
 const sessionSleepSeconds = record => (
-  Number(record?.deep_sleep_duration || 0)
-  + Number(record?.rem_sleep_duration || 0)
-  + Number(record?.light_sleep_duration || 0)
+  hasFiniteDuration(record?.total_sleep_duration)
+    ? Number(record.total_sleep_duration)
+    : Number(record?.deep_sleep_duration || 0)
+      + Number(record?.rem_sleep_duration || 0)
+      + Number(record?.light_sleep_duration || 0)
 );
 
 const dailySleepTotals = groupedSleepModel => Object.entries(groupedSleepModel || {})
   .map(([date, records]) => ({
     date,
     totalSleepSeconds: (records || [])
-      .filter(record => (
-        hasFiniteDuration(record?.deep_sleep_duration)
-        && hasFiniteDuration(record?.rem_sleep_duration)
-        && hasFiniteDuration(record?.light_sleep_duration)
-      ))
+      .filter(hasValidSessionDuration)
       .reduce((total, record) => total + sessionSleepSeconds(record), 0),
   }))
   .filter(({ date, totalSleepSeconds }) => (
@@ -110,7 +124,10 @@ export function calculateSleepDebt(groupedSleepModel, selectedDate) {
     const recencyWeight = recent.length === 1 ? 1 : 0.25 + (index / (recent.length - 1)) * 0.75;
     return total + (sleepNeedSeconds - night.totalSleepSeconds) * recencyWeight;
   }, 0);
-  const debtSeconds = Math.max(0, Math.round(weightedDebt / 60) * 60);
+  const debtSeconds = Math.max(
+    0,
+    Math.round(weightedDebt / DEBT_DISPLAY_INCREMENT_SECONDS) * DEBT_DISPLAY_INCREMENT_SECONDS,
+  );
   const category = getSleepDebtCategory(debtSeconds);
 
   return Object.freeze({
