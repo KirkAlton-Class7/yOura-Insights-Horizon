@@ -1,3 +1,5 @@
+import { formatWearDuration, getWearCoverage } from './wearCoverage.js';
+
 const READINESS_CONTRIBUTORS = [
   ['hrv_balance', 'HRV Balance'],
   ['resting_heart_rate', 'Resting Heart Rate'],
@@ -196,6 +198,31 @@ export function buildActivityCardSnapshot(data, options = {}) {
       `Sedentary: ${formatDuration(sedentary)} (${formatPercent(sedentary / total)})`,
     ]),
   ], headerLine);
+}
+
+export function buildWearCoverageCardSnapshot(data, selectedDate = '') {
+  const result = getWearCoverage(data);
+  const date = selectedDate || recordDate(data);
+  if (!result.available) {
+    return snapshot('Ring Wear Coverage', [
+      section('Coverage Summary', ['Status: No Daily Activity non-wear data available']),
+    ], date ? `Date: ${date}` : '');
+  }
+
+  return snapshot('Ring Wear Coverage', [
+    section('Coverage Summary', [
+      `Wear Coverage: ${result.isPartial ? 'Unavailable for an incomplete day' : `${result.coverage.toFixed(1)}%`}`,
+      `Status: ${result.isPartial ? 'Incomplete day — rating unavailable' : result.band.label}`,
+      `Non-Wear Time${!result.isPartial && result.nonWearSeconds > 0 ? ' Detected' : ''}: ${result.isPartial ? 'N/A' : formatWearDuration(result.nonWearSeconds)}`,
+      result.isPartial ? `Unclassified Time: ${formatWearDuration(result.unclassifiedSeconds)}` : '',
+      result.isPartial
+        ? `Activity Record: ${formatWearDuration(result.recordedSeconds)} of 24h (${result.recordedPercentage.toFixed(1)}%)`
+        : 'Data Window: Complete day',
+      `Guidance: ${result.isPartial
+        ? 'The exported activity record is incomplete, so wear coverage cannot be rated and daily insights may be incomplete.'
+        : result.band.description}`,
+    ]),
+  ], date ? `Date: ${date}` : '');
 }
 
 export function buildStressResilienceCardSnapshot(stressData, resilienceData, daytimeStressData = [], options = {}) {

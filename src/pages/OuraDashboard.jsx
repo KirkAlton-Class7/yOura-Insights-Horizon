@@ -6,6 +6,7 @@ import UploadScreen from '../components/UploadScreen';
 import DateNav from '../components/DateNav';
 import QuoteCard from '../components/QuoteCard';
 import ScoreSummaryGrid from '../components/ScoreSummaryGrid';
+import WearCoverageCard from '../components/WearCoverageCard';
 import CompareModal from '../components/CompareModal';
 import ReadinessCard from '../components/ReadinessCard';
 import SleepCard from '../components/SleepCard';
@@ -191,6 +192,10 @@ export default function OuraDashboard() {
             dateWindow={dateWindow}
             onSelectDate={setSelectedDate}
           />
+
+          <section id="wear-coverage" className="scroll-mt-20">
+            <WearCoverageCard data={activityData} selectedDate={selectedDate} />
+          </section>
 
           <div className="space-y-6">
             <section id="readiness" className="scroll-mt-20">

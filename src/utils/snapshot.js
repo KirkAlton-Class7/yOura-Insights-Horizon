@@ -5,6 +5,7 @@ import {
   buildReadinessCardSnapshot,
   buildSleepCardSnapshot,
   buildStressResilienceCardSnapshot,
+  buildWearCoverageCardSnapshot,
 } from './cardSnapshots.js';
 
 export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
@@ -25,6 +26,9 @@ export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
   if (readinessData) sections.push(buildReadinessCardSnapshot(readinessData, { date: selectedDate, dashboard: true }));
   if (sleepData) sections.push(buildSleepCardSnapshot(sleepData, sleepmodelData, sleeptimeData, { date: selectedDate, dashboard: true }));
   if (activityData) sections.push(buildActivityCardSnapshot(activityData, { date: selectedDate, dashboard: true }));
+  if (activityData?.non_wear_time !== null && activityData?.non_wear_time !== undefined && activityData?.non_wear_time !== '') {
+    sections.push(buildWearCoverageCardSnapshot(activityData, selectedDate));
+  }
   if (stressData || resilienceData || daytimeStressData.length) {
     sections.push(buildStressResilienceCardSnapshot(stressData, resilienceData, daytimeStressData, { date: selectedDate }));
   }
