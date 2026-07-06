@@ -1,0 +1,14 @@
+# Drilldowns Needed
+
+Widgets removed from the main dashboard that do not yet have a corresponding widget in their category drilldown.
+
+## Sleep
+
+- Average HRV
+- Breathing rate
+
+## Activity
+
+- Equivalent walking distance
+- Inactivity alerts
+- Activity intensity breakdown: Vigorous, Moderate, Light, and Sedentary durations

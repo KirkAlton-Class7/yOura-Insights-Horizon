@@ -9,7 +9,7 @@ import UnavailableState from './UnavailableState';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableRecordDates } from '../utils/dataAvailability';
 import { formatActivityDuration, getDailyHeartRateZoneMinutes, HEART_RATE_ZONES } from '../utils/activityDetails';
-import { getTrendPeriods, recordsInPeriod, TREND_RANGE_CONFIG } from '../utils/trendRanges';
+import { getTrendPeriods, recordsInPeriod, TREND_DEFAULT_RANGES, TREND_RANGE_CONFIG } from '../utils/trendRanges';
 import { useToast } from '../context/toast';
 
 const ZONE_COLORS = Object.freeze(['#94a3b8', '#7dd3fc', '#38bdf8', '#34d399', '#f59e0b', '#f43f5e']);
@@ -23,7 +23,7 @@ const getZonePoints = (appData, mode, anchorDate, range) => getTrendPeriods(mode
   });
 });
 
-const getHourlyZonePoints = (appData, date, aggregationHours = 7) => Array.from({ length: Math.ceil(24 / aggregationHours) }, (_, index) => {
+const getHourlyZonePoints = (appData, date, aggregationHours = TREND_DEFAULT_RANGES.day) => Array.from({ length: Math.ceil(24 / aggregationHours) }, (_, index) => {
   const hour = index * aggregationHours;
   const endHour = Math.min(24, hour + aggregationHours);
   const records = (appData.heartrate?.[date] || []).filter(record => {
@@ -39,7 +39,7 @@ const getHourlyZonePoints = (appData, date, aggregationHours = 7) => Array.from(
   });
 });
 
-const getLatestObservedHourKey = (appData, date, aggregationHours = 7) => {
+const getLatestObservedHourKey = (appData, date, aggregationHours = TREND_DEFAULT_RANGES.day) => {
   const points = getHourlyZonePoints(appData, date, aggregationHours);
   for (let index = points.length - 1; index >= 0; index -= 1) {
     if (points[index].total > 0) return points[index].key;
@@ -139,8 +139,10 @@ function ActivityZoneContent({ appData, initialDate, onClose }) {
   const [mode, setMode] = useState('week');
   const [anchorDate, setAnchorDate] = useState(initialDate);
   const [selectedKey, setSelectedKey] = useState(initialDate);
-  const [ranges, setRanges] = useState({ day: 7, week: 4, month: 3 });
-  const [rangeDrafts, setRangeDrafts] = useState({ day: '7', week: '4', month: '3' });
+  const [ranges, setRanges] = useState(() => ({ ...TREND_DEFAULT_RANGES }));
+  const [rangeDrafts, setRangeDrafts] = useState(() => Object.fromEntries(
+    Object.entries(TREND_DEFAULT_RANGES).map(([key, value]) => [key, String(value)]),
+  ));
   const availableDates = useMemo(() => getAvailableRecordDates(
     appData.heartrate,
     record => Number.isFinite(Number(record?.bpm)),

@@ -1,5 +1,5 @@
-import { calendarDates } from '../utils/dateService';
 import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
+import { getSleepTimelineTicks } from '../utils/sleepDetails';
 
 const STAGE_POSITIONS = Object.freeze({
   1: 28,
@@ -21,7 +21,7 @@ export default function SleepStageTimeline({ phases, startTimestamp, endTimestam
   const padding = { left: 30, right: 30, top: 18, bottom: 48 };
   const plotWidth = width - padding.left - padding.right;
   const blockWidth = phases.length ? plotWidth / phases.length : 0;
-  const timeTicks = calendarDates.getTimeAxisTicks(startTimestamp, endTimestamp);
+  const timeTicks = getSleepTimelineTicks(startTimestamp, endTimestamp);
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label="Sleep stages over the night">

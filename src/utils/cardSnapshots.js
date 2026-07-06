@@ -1,7 +1,5 @@
 import { formatWearDuration, getWearCoverage } from './wearCoverage.js';
 import { calendarDates } from './dateService.js';
-import { calculateSleepDebt, formatSleepDebt } from './sleepDebt.js';
-import { calculateSleepRegularity } from './sleepRegularity.js';
 
 const READINESS_CONTRIBUTORS = [
   ['hrv_balance', 'HRV Balance'],
@@ -23,15 +21,6 @@ const SLEEP_CONTRIBUTORS = [
   ['restfulness', 'Restfulness'],
   ['latency', 'Latency'],
   ['timing', 'Timing'],
-];
-
-const ACTIVITY_CONTRIBUTORS = [
-  ['meet_daily_targets', 'Meet Daily Targets'],
-  ['move_every_hour', 'Move Every Hour'],
-  ['recovery_time', 'Recovery Time'],
-  ['stay_active', 'Stay Active'],
-  ['training_frequency', 'Training Frequency'],
-  ['training_volume', 'Training Volume'],
 ];
 
 const hasValue = value => value !== null && value !== undefined && value !== '';
@@ -102,12 +91,6 @@ function getSleepModel(sleepmodelData) {
   return sleepmodelData?.find(record => record.type === 'long_sleep') || sleepmodelData?.[0] || null;
 }
 
-function getOptimalBedtime(data, sleeptimeData) {
-  const day = data?.day || sleeptimeData?.day;
-  if (!day || !sleeptimeData?.optimal_bedtime) return null;
-  return calendarDates.formatOptimalBedtime(day, sleeptimeData.optimal_bedtime);
-}
-
 export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, options = {}) {
   const sleepModel = getSleepModel(sleepmodelData);
   const date = options.date || recordDate(data, sleepModel, sleeptimeData);
@@ -140,60 +123,14 @@ export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, opti
         : '',
     ]));
 
-    sections.push(section('Key Metrics', [
-      `Total Sleep: ${formatDuration(asleep)}`,
-      `Time in Bed: ${formatDuration(sleepModel.time_in_bed)}`,
-      `Resting Heart Rate: ${displayValue(sleepModel.resting_heart_rate || sleepModel.lowest_heart_rate)} bpm`,
-      `Average Heart Rate: ${hasValue(sleepModel.average_heart_rate) ? Number(sleepModel.average_heart_rate).toFixed(0) : '--'} bpm`,
-      `Lowest Heart Rate: ${displayValue(sleepModel.lowest_heart_rate)} bpm`,
-      `Heart Rate Variability (HRV): ${hasValue(sleepModel.average_hrv) ? Number(sleepModel.average_hrv).toFixed(0) : '--'} ms`,
-      `Breathing Rate: ${hasValue(sleepModel.average_breath) ? Number(sleepModel.average_breath).toFixed(1) : '--'} br/min`,
-      `Sleep Efficiency: ${hasValue(sleepModel.efficiency) ? `${Number(sleepModel.efficiency)}%` : '--'}`,
-      `Restlessness: ${displayValue(sleepModel.restless_periods)}`,
-    ]));
   } else {
     sections.push(section('Sleep Stages and HR', ['Status: No sleep-model data available']));
   }
-
-  const sleepHistory = options.allSleepmodelData || (date ? { [date]: sleepmodelData || [] } : {});
-  const sleepRegularity = calculateSleepRegularity(sleepHistory, date);
-  sections.push(section('Sleep Regularity', sleepRegularity ? [
-    `Status: ${sleepRegularity.status}`,
-    `Consistency Score: ${sleepRegularity.score}/100`,
-    `Recent Nights: ${sleepRegularity.nights}`,
-  ] : [
-    'Status: At least five nights with bed and wake times are required.',
-  ]));
-
-  const sleepDebt = calculateSleepDebt(sleepHistory, date);
-  sections.push(section('Sleep Debt', sleepDebt ? [
-    `Estimated Debt: ${formatSleepDebt(sleepDebt.debtSeconds)}`,
-    `Category: ${sleepDebt.category.label}`,
-    `Estimated Sleep Need: ${formatSleepDebt(sleepDebt.sleepNeedSeconds)}`,
-    `Recent Nights: ${sleepDebt.recentNights}`,
-    sleepDebt.category.description,
-  ] : [
-    'Status: At least five nights of sleep data within the previous 14 days are required.',
-  ]));
-
-  const bedtimeWindow = getOptimalBedtime(data, sleeptimeData);
-  sections.push(section('Optimal Bedtime', [
-    bedtimeWindow ? `Window: ${bedtimeWindow}` : 'Status: No optimal-bedtime data available',
-  ]));
 
   return snapshot('Sleep', sections, headerLine);
 }
 
 export function buildActivityCardSnapshot(data, options = {}) {
-  const high = Number(data?.high_activity_time || 0);
-  const medium = Number(data?.medium_activity_time || 0);
-  const low = Number(data?.low_activity_time || 0);
-  const sedentary = Number(data?.sedentary_time || 0);
-  const total = high + medium + low + sedentary || 1;
-  const equivalentDistance = hasValue(data?.equivalent_walking_distance)
-    ? (Number(data.equivalent_walking_distance) / 1609.344).toFixed(2)
-    : '--';
-
   const date = options.date || recordDate(data);
   const headerLine = options.dashboard
     ? `Date: ${date}`
@@ -201,20 +138,6 @@ export function buildActivityCardSnapshot(data, options = {}) {
 
   return snapshot('Activity', [
     section('Activity Summary', [`Score: ${displayValue(data?.score)}`]),
-    section('Activity Contributors', contributorLines(data?.contributors, ACTIVITY_CONTRIBUTORS)),
-    section('Activity Metrics', [
-      `Steps: ${hasValue(data?.steps) ? Number(data.steps).toLocaleString() : '--'}`,
-      `Active Calories: ${displayValue(data?.active_calories)}`,
-      `Total Calories: ${displayValue(data?.total_calories)}`,
-      `Equivalent Walking Distance: ${equivalentDistance} mi`,
-      `Inactivity Alerts: ${displayValue(data?.inactivity_alerts, 0)}`,
-    ]),
-    section('Activity Breakdown', [
-      `Vigorous: ${formatDuration(high)} (${formatPercent(high / total)})`,
-      `Moderate: ${formatDuration(medium)} (${formatPercent(medium / total)})`,
-      `Light: ${formatDuration(low)} (${formatPercent(low / total)})`,
-      `Sedentary: ${formatDuration(sedentary)} (${formatPercent(sedentary / total)})`,
-    ]),
   ], headerLine);
 }
 

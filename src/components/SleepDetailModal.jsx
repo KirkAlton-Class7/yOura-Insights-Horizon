@@ -11,7 +11,7 @@ import SleepStageTimeline from './SleepStageTimeline';
 import SleepStagesTrendModal from './SleepStagesTrendModal';
 import SubScoreBar from './SubScoreBar';
 import UnavailableState from './UnavailableState';
-import { getScoreColor } from '../utils/colors';
+import { getScoreColor, SEMANTIC_COLORS } from '../utils/colors';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableDatesAcrossDatasets } from '../utils/dataAvailability';
 import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
@@ -20,11 +20,12 @@ import {
   SLEEP_DEBT_CATEGORIES,
   calculateSleepDebt,
   formatSleepDebt,
-  getSleepDebtMarkerPosition,
+  getSleepDebtMarkerPlacement,
 } from '../utils/sleepDebt';
 import {
   formatSleepDuration,
   getAverageOxygenSaturation,
+  getNighttimeBreathingMarkerPosition,
   getNighttimeBreathingStatus,
   getSleepStageSummary,
 } from '../utils/sleepDetails';
@@ -62,6 +63,19 @@ function StaticMetric({ label, value, unit, onOpen }) {
   );
 }
 
+function SleepHabitMetric({ label, value, placeholder }) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-slate-900/65 p-5 sm:col-span-2">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+      {value ? (
+        <p className="mt-3 font-outfit text-2xl font-medium tabular-nums text-slate-100">{value}</p>
+      ) : (
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">{placeholder}</p>
+      )}
+    </section>
+  );
+}
+
 function SleepDebtMetric({ sleepDebt, onOpen }) {
   if (!sleepDebt) {
     return (
@@ -74,7 +88,8 @@ function SleepDebtMetric({ sleepDebt, onOpen }) {
       </div>
     );
   }
-  const markerPosition = getSleepDebtMarkerPosition(sleepDebt.debtSeconds);
+  const markerPlacement = getSleepDebtMarkerPlacement(sleepDebt.debtSeconds);
+  const categories = Object.entries(SLEEP_DEBT_CATEGORIES);
   return (
     <button type="button" onClick={onOpen} className="rounded-2xl border border-white/10 bg-slate-900/65 p-5 text-left transition-colors hover:border-cyan-300/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:col-span-2" aria-label="Open Sleep Debt details">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Sleep Debt</p>
@@ -91,23 +106,21 @@ function SleepDebtMetric({ sleepDebt, onOpen }) {
       </div>
       <div className="relative mt-6" aria-label={`${sleepDebt.category.label} sleep debt`}>
         <div className="grid grid-cols-4 gap-2" aria-hidden="true">
-          {Object.values(SLEEP_DEBT_CATEGORIES).map(category => (
+          {categories.map(([categoryKey, category]) => (
             <div
               key={category.label}
-              className="h-1.5 rounded-full"
-              style={{
-                backgroundColor: category.label === sleepDebt.category.label
-                  ? category.color
-                  : 'rgba(148,163,184,0.28)',
-              }}
-            />
+              className="relative h-1.5 rounded-full"
+              style={{ backgroundColor: categoryKey === markerPlacement.categoryKey ? category.color : 'rgba(148,163,184,0.28)' }}
+            >
+              {categoryKey === markerPlacement.categoryKey && (
+                <span
+                  className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-slate-100 bg-slate-900"
+                  style={{ left: `${markerPlacement.position}%` }}
+                />
+              )}
+            </div>
           ))}
         </div>
-        <span
-          className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-slate-100 bg-slate-900"
-          style={{ left: `${markerPosition}%` }}
-          aria-hidden="true"
-        />
       </div>
       <div className="mt-3 flex justify-between text-xs text-slate-400">
         <span>None</span>
@@ -222,26 +235,36 @@ function NighttimeBreathingCard({ status, onOpen }) {
   if (!status) {
     return <UnavailableState title="Nighttime breathing unavailable" description="No breathing-disturbance index was available for this date." />;
   }
-  const marker = Math.min(98, Math.max(2, (status.index / 20) * 100));
+  const marker = Math.min(98, Math.max(2, getNighttimeBreathingMarkerPosition(status.index)));
+  const statusColor = {
+    few: SEMANTIC_COLORS.optimal,
+    occasional: SEMANTIC_COLORS.good,
+    frequent: SEMANTIC_COLORS.bad,
+  }[status.level];
   return (
     <button type="button" onClick={onOpen} className="w-full rounded-2xl border border-white/10 bg-slate-900/55 p-5 text-left transition-colors hover:border-cyan-300/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:p-6" aria-label="Learn about nighttime breathing">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Nighttime Breathing</p>
-          <h3 className="mt-3 font-outfit text-4xl font-light text-slate-100">{status.label}</h3>
+          <h3 className="mt-3 font-outfit text-4xl font-light" style={{ color: statusColor }}>{status.label}</h3>
         </div>
         <Info className="h-5 w-5 text-slate-500" aria-hidden="true" />
       </div>
       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-300">{status.description}</p>
       <div className="mt-7">
-        <div className="relative h-2 rounded-full bg-gradient-to-r from-cyan-400 via-sky-300 to-rose-200">
+        <div
+          className="relative h-2 rounded-full"
+          style={{ background: `linear-gradient(90deg, ${SEMANTIC_COLORS.optimal} 0%, ${SEMANTIC_COLORS.good} 33.333%, ${SEMANTIC_COLORS.fair} 66.667%, ${SEMANTIC_COLORS.bad} 100%)` }}
+        >
           <span
             className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-slate-100 bg-slate-900"
             style={{ left: `${marker}%` }}
           />
         </div>
-        <div className="mt-3 flex justify-between text-xs text-slate-400">
-          <span>Few</span><span>Occasional</span><span>Frequent</span>
+        <div className="mt-3 flex justify-between text-xs">
+          <span style={{ color: SEMANTIC_COLORS.optimal }}>Few</span>
+          <span style={{ color: SEMANTIC_COLORS.good }}>Occasional</span>
+          <span style={{ color: SEMANTIC_COLORS.bad }}>Frequent</span>
         </div>
         <p className="mt-4 text-xs text-slate-500">Nightly disturbance index: {displayNumber(status.index, 1)}</p>
       </div>
@@ -259,10 +282,11 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
   const [isSleepRegularityOpen, setIsSleepRegularityOpen] = useState(initialTarget === 'regularity');
   const [isSleepStagesOpen, setIsSleepStagesOpen] = useState(initialTarget === 'stages');
   const availableSleepDates = useMemo(() => getAvailableDatesAcrossDatasets(
-    ['sleep', 'sleepmodel', 'spo2'].map(key => appData[key]),
+    ['sleep', 'sleepmodel', 'spo2', 'sleeptime'].map(key => appData[key]),
   ), [appData]);
   const sleep = appData.sleep?.[detailDate]?.[0] || null;
   const sleepModel = getLongSleepRecord(appData.sleepmodel?.[detailDate]);
+  const sleeptime = appData.sleeptime?.[detailDate]?.[0] || null;
   const spo2 = appData.spo2?.[detailDate]?.[0] || null;
   const summary = useMemo(() => getSleepStageSummary(sleepModel), [sleepModel]);
   const sleepDebt = useMemo(
@@ -272,6 +296,10 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
   const sleepRegularity = useMemo(
     () => calculateSleepRegularity(appData.sleepmodel || {}, detailDate),
     [appData.sleepmodel, detailDate],
+  );
+  const optimalBedtime = calendarDates.formatOptimalBedtime(
+    sleeptime?.day || detailDate,
+    sleeptime?.optimal_bedtime,
   );
   const oxygen = getAverageOxygenSaturation(spo2);
   const breathingStatus = getNighttimeBreathingStatus(spo2);
@@ -370,8 +398,23 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
                 <StaticMetric label="Time in Bed" value={summary ? formatSleepDuration(summary.timeInBed) : '--'} onOpen={() => setDrillMetric('timeInBed')} />
                 <StaticMetric label="Sleep Efficiency" value={summary ? displayNumber(summary.efficiency) : '--'} unit="%" onOpen={() => setDrillMetric('sleepEfficiency')} />
                 <StaticMetric label="Resting Heart Rate" value={summary ? displayNumber(summary.restingHeartRate) : '--'} unit="bpm" onOpen={() => setDrillMetric('restingHeartRate')} />
+              </div>
+            </section>
+
+            <section>
+              <h2 className="font-outfit text-xl font-semibold text-slate-100">Sleep Habits</h2>
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <SleepRegularityMetric regularity={sleepRegularity} onOpen={() => setIsSleepRegularityOpen(true)} />
                 <SleepDebtMetric sleepDebt={sleepDebt} onOpen={() => setIsSleepDebtOpen(true)} />
+                <SleepHabitMetric
+                  label="Optimal Bedtime"
+                  value={optimalBedtime}
+                  placeholder="No optimal bedtime window is available for this date."
+                />
+                <SleepHabitMetric
+                  label="Chronotype"
+                  placeholder="Chronotype insights will be available in a future update."
+                />
               </div>
             </section>
 

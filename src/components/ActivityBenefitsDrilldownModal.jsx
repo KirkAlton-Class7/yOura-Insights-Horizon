@@ -10,7 +10,7 @@ import { useToast } from '../context/toast';
 import { formatActivityDuration, getDailyActivityBenefits } from '../utils/activityDetails';
 import { getAvailableRecordDates } from '../utils/dataAvailability';
 import { calendarDates } from '../utils/dateService';
-import { getTrendPeriods, recordsInPeriod, TREND_RANGE_CONFIG } from '../utils/trendRanges';
+import { getTrendPeriods, recordsInPeriod, TREND_DEFAULT_RANGES, TREND_RANGE_CONFIG } from '../utils/trendRanges';
 
 const MODES = Object.freeze([['day', 'Day'], ['week', 'Week'], ['month', 'Month']]);
 const BENEFIT_COLORS = Object.freeze({ metabolic: '#7dd3fc', cardiovascular: '#f59e0b' });
@@ -127,8 +127,10 @@ function ActivityBenefitsContent({ appData, initialDate, onClose }) {
   const [mode, setMode] = useState('week');
   const [anchorDate, setAnchorDate] = useState(initialDate);
   const [aggregationHours, setAggregationHours] = useState(7);
-  const [ranges, setRanges] = useState({ day: 7, week: 4, month: 3 });
-  const [rangeDrafts, setRangeDrafts] = useState({ day: '7', week: '4', month: '3' });
+  const [ranges, setRanges] = useState(() => ({ ...TREND_DEFAULT_RANGES }));
+  const [rangeDrafts, setRangeDrafts] = useState(() => Object.fromEntries(
+    Object.entries(TREND_DEFAULT_RANGES).map(([key, value]) => [key, String(value)]),
+  ));
   const [selectedKey, setSelectedKey] = useState(initialDate);
   const availableDates = useMemo(() => getAvailableRecordDates(
     appData.heartrate,

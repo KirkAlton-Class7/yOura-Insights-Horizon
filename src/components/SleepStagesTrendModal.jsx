@@ -12,6 +12,7 @@ import { formatSleepDuration } from '../utils/sleepDetails';
 import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
 import { getSleepStageTrendSeries, shiftSleepStageAnchor } from '../utils/sleepStageTrends';
 import { METRIC_DRILLDOWN_RANGES } from '../utils/metricDrilldown';
+import { TREND_DEFAULT_RANGES } from '../utils/trendRanges';
 import { useToast } from '../context/toast';
 
 const MODES = Object.freeze([['day', 'Day'], ['week', 'Week'], ['month', 'Month']]);
@@ -120,8 +121,10 @@ function SleepStagesTrendContent({ appData, initialDate, onClose }) {
   const [mode, setMode] = useState('day');
   const [anchorDate, setAnchorDate] = useState(initialDate);
   const [selectedPointKey, setSelectedPointKey] = useState(initialDate);
-  const [ranges, setRanges] = useState({ day: 7, week: 4, month: 3 });
-  const [rangeDrafts, setRangeDrafts] = useState({ day: '7', week: '4', month: '3' });
+  const [ranges, setRanges] = useState(() => ({ ...TREND_DEFAULT_RANGES }));
+  const [rangeDrafts, setRangeDrafts] = useState(() => Object.fromEntries(
+    Object.entries(TREND_DEFAULT_RANGES).map(([key, value]) => [key, String(value)]),
+  ));
   const rangeConfig = METRIC_DRILLDOWN_RANGES[mode];
   const series = useMemo(() => getSleepStageTrendSeries(appData, mode, anchorDate, ranges[mode]), [anchorDate, appData, mode, ranges]);
   const availableDates = useMemo(() => getAvailableRecordDates(

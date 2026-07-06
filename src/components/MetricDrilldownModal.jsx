@@ -251,7 +251,7 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose }) {
   };
 
   const shift = direction => {
-    setAnchorDate(current => shiftMetricDrilldownAnchor(current, mode, direction));
+    setAnchorDate(current => shiftMetricDrilldownAnchor(current, mode, direction, ranges[mode]));
   };
 
   const selectCalendarDate = date => {

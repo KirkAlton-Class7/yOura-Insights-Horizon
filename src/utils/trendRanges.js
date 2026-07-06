@@ -1,10 +1,14 @@
 import { calendarDates } from './dateService.js';
 
 export const TREND_RANGE_CONFIG = Object.freeze({
-  day: Object.freeze({ minimum: 3, maximum: 30, defaultValue: 7, unit: 'days' }),
-  week: Object.freeze({ minimum: 3, maximum: 15, defaultValue: 4, unit: 'weeks' }),
+  day: Object.freeze({ minimum: 3, maximum: 30, defaultValue: 14, unit: 'days' }),
+  week: Object.freeze({ minimum: 3, maximum: 15, defaultValue: 6, unit: 'weeks' }),
   month: Object.freeze({ minimum: 3, maximum: 24, defaultValue: 3, unit: 'months' }),
 });
+
+export const TREND_DEFAULT_RANGES = Object.freeze(Object.fromEntries(
+  Object.entries(TREND_RANGE_CONFIG).map(([mode, config]) => [mode, config.defaultValue]),
+));
 
 export const getTrendPeriods = (mode, anchorDate, count) => {
   if (mode === 'week') {

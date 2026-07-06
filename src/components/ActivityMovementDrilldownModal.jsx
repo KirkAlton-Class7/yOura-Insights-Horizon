@@ -10,7 +10,7 @@ import { useToast } from '../context/toast';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableRecordDates } from '../utils/dataAvailability';
 import { formatActivityDuration, getActivityTimeSeconds, getDailyMovementBuckets } from '../utils/activityDetails';
-import { getTrendPeriods, recordsInPeriod, TREND_RANGE_CONFIG } from '../utils/trendRanges';
+import { getTrendPeriods, recordsInPeriod, TREND_DEFAULT_RANGES, TREND_RANGE_CONFIG } from '../utils/trendRanges';
 
 const MODES = Object.freeze([
   ['day', 'Day'],
@@ -167,8 +167,10 @@ function ActivityMovementContent({ appData, initialDate, initialMode = 'day', on
   const [mode, setMode] = useState(initialMode);
   const [anchorDate, setAnchorDate] = useState(initialDate);
   const [aggregationHours, setAggregationHours] = useState(7);
-  const [ranges, setRanges] = useState({ day: 7, week: 4, month: 3 });
-  const [rangeDrafts, setRangeDrafts] = useState({ day: '7', week: '4', month: '3' });
+  const [ranges, setRanges] = useState(() => ({ ...TREND_DEFAULT_RANGES }));
+  const [rangeDrafts, setRangeDrafts] = useState(() => Object.fromEntries(
+    Object.entries(TREND_DEFAULT_RANGES).map(([key, value]) => [key, String(value)]),
+  ));
   const [selectedKey, setSelectedKey] = useState(initialMode === 'day' ? '0' : initialDate);
   const availableDates = useMemo(() => getAvailableRecordDates(appData.activity), [appData.activity]);
   const dayBuckets = useMemo(() => aggregateHourlyBuckets(appData.activity?.[anchorDate]?.[0], aggregationHours), [aggregationHours, anchorDate, appData.activity]);

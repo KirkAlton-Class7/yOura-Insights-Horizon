@@ -1,3 +1,11 @@
+import { calendarDates } from './dateService.js';
+
+const NIGHTTIME_BREATHING_LIMITS = Object.freeze({
+  fewEnd: 5,
+  occasionalEnd: 15,
+  gradientEnd: 25,
+});
+
 const finiteNumber = value => {
   if (value === '' || value === null || value === undefined) return null;
   const number = Number(value);
@@ -11,6 +19,21 @@ export const formatSleepDuration = seconds => {
   if (hours && minutes) return `${hours}h ${minutes}m`;
   if (hours) return `${hours}h`;
   return `${minutes}m`;
+};
+
+export const getSleepTimelineTicks = (startTimestamp, endTimestamp, minimumSeparation = 0.13) => {
+  const ticks = calendarDates.getTimeAxisTicks(startTimestamp, endTimestamp);
+  if (ticks.length <= 2) return ticks;
+
+  const visible = [ticks[0]];
+  ticks.slice(1, -1).forEach(tick => {
+    const previous = visible[visible.length - 1];
+    if (tick.position - previous.position >= minimumSeparation && 1 - tick.position >= minimumSeparation) {
+      visible.push(tick);
+    }
+  });
+  visible.push(ticks[ticks.length - 1]);
+  return Object.freeze(visible);
 };
 
 export function getSleepStageSummary(record) {
@@ -63,7 +86,7 @@ export function getAverageOxygenSaturation(spo2Record) {
 export function getNighttimeBreathingStatus(spo2Record) {
   const index = finiteNumber(spo2Record?.breathing_disturbance_index);
   if (index === null) return null;
-  if (index < 5) {
+  if (index < NIGHTTIME_BREATHING_LIMITS.fewEnd) {
     return Object.freeze({
       index,
       label: 'Mostly steady',
@@ -71,7 +94,7 @@ export function getNighttimeBreathingStatus(spo2Record) {
       level: 'few',
     });
   }
-  if (index < 15) {
+  if (index < NIGHTTIME_BREATHING_LIMITS.occasionalEnd) {
     return Object.freeze({
       index,
       label: 'Some variations',
@@ -86,3 +109,16 @@ export function getNighttimeBreathingStatus(spo2Record) {
     level: 'frequent',
   });
 }
+
+export const getNighttimeBreathingMarkerPosition = value => {
+  const index = Math.max(0, Number(value || 0));
+  const { fewEnd, occasionalEnd, gradientEnd } = NIGHTTIME_BREATHING_LIMITS;
+  if (index < fewEnd) return (index / fewEnd) * (100 / 3);
+  if (index < occasionalEnd) {
+    return (100 / 3) + ((index - fewEnd) / (occasionalEnd - fewEnd)) * (100 / 3);
+  }
+  return (200 / 3) + Math.min(
+    (index - occasionalEnd) / (gradientEnd - occasionalEnd),
+    1,
+  ) * (100 / 3);
+};

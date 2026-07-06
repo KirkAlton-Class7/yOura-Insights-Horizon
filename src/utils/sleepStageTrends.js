@@ -1,6 +1,7 @@
 import { calendarDates } from './dateService.js';
 import { getLongSleepRecord } from './readinessDetails.js';
 import { getSleepStageSummary } from './sleepDetails.js';
+import { TREND_RANGE_CONFIG } from './trendRanges.js';
 
 const emptyStages = () => ({ awake: 0, rem: 0, light: 0, deep: 0, observed: 0 });
 
@@ -33,7 +34,7 @@ const point = (key, label, startDate, endDate, stages) => Object.freeze({
 });
 
 export function getSleepStageTrendSeries(appData, mode, anchorDate, requestedRange) {
-  const range = requestedRange ?? (mode === 'day' ? 7 : mode === 'week' ? 4 : 3);
+  const range = requestedRange ?? TREND_RANGE_CONFIG[mode]?.defaultValue;
   let points;
   if (mode === 'day') {
     const start = calendarDates.addDays(anchorDate, -(range - 1));

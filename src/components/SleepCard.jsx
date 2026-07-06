@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from 'react';
-import { Info } from 'lucide-react';
 import Card from './Card';
 import SubScoreBar from './SubScoreBar';
 import SleepStageTimeline from './SleepStageTimeline';
@@ -7,82 +6,7 @@ import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
 import { buildSleepCardSnapshot } from '../utils/cardSnapshots';
 import UnavailableState from './UnavailableState';
-import { calendarDates } from '../utils/dateService';
-import { calculateSleepRegularity } from '../utils/sleepRegularity';
 import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
-import {
-  SLEEP_DEBT_CATEGORIES,
-  calculateSleepDebt,
-  formatSleepDebt,
-  getSleepDebtMarkerPosition,
-} from '../utils/sleepDebt';
-
-function SleepDebtSection({ sleepDebt, onOpen }) {
-  if (!sleepDebt) {
-    return (
-      <UnavailableState
-        title="Sleep debt unavailable"
-        description="At least five nights of sleep data within the previous 14 days are required."
-        compact
-      />
-    );
-  }
-
-  const categories = Object.values(SLEEP_DEBT_CATEGORIES);
-  const markerPosition = getSleepDebtMarkerPosition(sleepDebt.debtSeconds);
-
-  return (
-    <section className="mt-4 border-t border-white/10 pt-4" aria-label="Estimated sleep debt">
-      <button
-        type="button"
-        onClick={onOpen}
-        className="relative z-20 block w-full rounded-2xl border border-white/10 bg-slate-950/35 p-4 text-left transition-colors hover:bg-slate-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:p-5"
-      >
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">Sleep Debt</div>
-        <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="font-outfit text-4xl font-light tabular-nums text-slate-100">
-            {formatSleepDebt(sleepDebt.debtSeconds)}
-          </span>
-          <span
-            className="font-outfit text-lg font-semibold uppercase tracking-[0.14em]"
-            style={{ color: sleepDebt.category.color }}
-          >
-            {sleepDebt.category.label}
-          </span>
-        </div>
-
-        <div className="relative mt-6" aria-hidden="true">
-          <div className="grid grid-cols-4 gap-2">
-            {categories.map(category => (
-              <div
-                key={category.label}
-                className="h-1.5 rounded-full"
-                style={{
-                  backgroundColor: category.label === sleepDebt.category.label
-                    ? category.color
-                    : 'rgba(148, 163, 184, 0.25)',
-                }}
-              />
-            ))}
-          </div>
-          <div
-            className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-slate-100 bg-slate-900 shadow-md"
-            style={{ left: `${markerPosition}%` }}
-          />
-        </div>
-        <div className="mt-3 flex justify-between text-xs text-slate-400">
-          <span>None</span>
-          <span>High</span>
-        </div>
-
-        <p className="mt-4 text-sm leading-relaxed text-slate-300">{sleepDebt.category.description}</p>
-        <p className="mt-3 text-[11px] text-slate-500">
-          Estimated from exported sleep history · Sleep need {formatSleepDebt(sleepDebt.sleepNeedSeconds)} · {sleepDebt.recentNights} nights
-        </p>
-      </button>
-    </section>
-  );
-}
 
 export default function SleepCard({
   data,
@@ -107,14 +31,6 @@ export default function SleepCard({
   const sleepHistory = useMemo(
     () => allSleepmodelData || (sleepDate ? { [sleepDate]: sleepmodelData || [] } : {}),
     [allSleepmodelData, sleepDate, sleepmodelData],
-  );
-  const sleepDebt = useMemo(
-    () => calculateSleepDebt(sleepHistory, sleepDate),
-    [sleepHistory, sleepDate],
-  );
-  const sleepRegularity = useMemo(
-    () => calculateSleepRegularity(sleepHistory, sleepDate),
-    [sleepHistory, sleepDate],
   );
 
   const stagesHtml = useMemo(() => {
@@ -208,27 +124,6 @@ export default function SleepCard({
       );
     }
 
-    // Extra metrics
-    const avgHR = sleepModel.average_heart_rate ? Number(sleepModel.average_heart_rate).toFixed(0) : '--';
-    const avgHRV = sleepModel.average_hrv ? Number(sleepModel.average_hrv).toFixed(0) : '--';
-    const avgBr = sleepModel.average_breath ? Number(sleepModel.average_breath).toFixed(1) : '--';
-    const loHR = sleepModel.lowest_heart_rate || '--';
-    const restingHR = sleepModel.resting_heart_rate || sleepModel.lowest_heart_rate || '--';
-    const eff = sleepModel.efficiency ? Number(sleepModel.efficiency) + '%' : '--';
-    const timeInBed = Number(sleepModel.time_in_bed || 0);
-
-    const metricItems = [
-      ['Total Sleep', fmtDuration(total), 'metric:totalSleep'],
-      ['Time in Bed', fmtDuration(timeInBed), 'metric:timeInBed'],
-      ['Resting HR', `${restingHR} bpm`, 'metric:restingHeartRate'],
-      ['Avg HR', `${avgHR} bpm`, 'top'],
-      ['Lowest HR', `${loHR} bpm`, 'metric:restingHeartRate'],
-      ['Avg HRV', `${avgHRV} ms`, 'metric:averageHrv'],
-      ['Breathing', `${avgBr} br/min`, 'metric:respiratoryRate'],
-      ['Efficiency', eff, 'metric:sleepEfficiency'],
-      ['Restless', sleepModel.restless_periods || '--', 'top'],
-    ];
-
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
         <button
@@ -243,41 +138,11 @@ export default function SleepCard({
           </div>
           {hypnoHtml}
         </button>
-        <div className="mt-5 text-xs text-slate-500 uppercase tracking-wider">Key Metrics</div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-4 mt-3 text-xs sm:grid-cols-3">
-          {metricItems.map(([label, value, target]) => (
-            <button
-              key={label}
-              type="button"
-              onClick={event => openTarget(event, target)}
-              className="relative z-20 rounded-xl p-2 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-            >
-              <span className="text-slate-500">{label}</span><br />
-              <span className="font-outfit font-semibold tabular-nums text-white">{value}</span>
-            </button>
-          ))}
-        </div>
       </div>
     );
   }, [sleepModel, openTarget]);
 
-  // Optimal bedtime window
-  const bedtimeWindow = useMemo(() => {
-    const day = data?.day || sleeptimeData?.day;
-    if (!day || !sleeptimeData?.optimal_bedtime) return null;
-    const window = calendarDates.formatOptimalBedtime(day, sleeptimeData.optimal_bedtime);
-    if (!window) return null;
-    return (
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <div className="text-xs text-slate-500 uppercase tracking-wider">Optimal Bedtime Window</div>
-        <div className="flex gap-4 mt-1">
-          <span className="text-sm text-purple-300">{window}</span>
-        </div>
-      </div>
-    );
-  }, [sleeptimeData, data]);
-
-  const hasAnySleepData = Boolean(data || sleepModel || sleepDebt || sleeptimeData?.optimal_bedtime);
+  const hasAnySleepData = Boolean(data || sleepModel || sleeptimeData?.optimal_bedtime);
 
   return (
     <Card
@@ -316,31 +181,6 @@ export default function SleepCard({
         )}
         {stagesHtml || (
           <UnavailableState title="Sleep stages and HR unavailable" description="No sleep-model data was available for this date." compact />
-        )}
-        {sleepRegularity ? (
-          <section className="mt-4 border-t border-white/10 pt-4" aria-label="Sleep regularity">
-            <button
-              type="button"
-              onClick={event => openTarget(event, 'regularity')}
-              className="relative z-20 block w-full rounded-2xl border border-white/10 bg-slate-950/35 p-4 text-left transition-colors hover:bg-slate-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:p-5"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">Sleep Regularity</div>
-                  <div className="mt-2 font-outfit text-3xl font-light" style={{ color: sleepRegularity.color }}>
-                    {sleepRegularity.status}
-                  </div>
-                </div>
-                <Info className="h-5 w-5 text-slate-400" aria-hidden="true" />
-              </div>
-            </button>
-          </section>
-        ) : (
-          <UnavailableState title="Sleep regularity unavailable" description="At least five nights with bed and wake times are required." compact />
-        )}
-        <SleepDebtSection sleepDebt={sleepDebt} onOpen={event => openTarget(event, 'debt')} />
-        {bedtimeWindow || (
-          <UnavailableState title="Optimal bedtime unavailable" description="No optimal-bedtime data was available for this date." compact />
         )}
       </div>
     </Card>

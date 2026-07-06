@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {
   formatSleepDuration,
   getAverageOxygenSaturation,
+  getNighttimeBreathingMarkerPosition,
   getNighttimeBreathingStatus,
   getSleepStageSummary,
+  getSleepTimelineTicks,
 } from '../src/utils/sleepDetails.js';
 
 test('sleep detail durations and percentages derive from exported stages', () => {
@@ -36,4 +38,20 @@ test('nighttime breathing uses three stable index bands', () => {
   assert.equal(getNighttimeBreathingStatus({ breathing_disturbance_index: 0.8 }).level, 'few');
   assert.equal(getNighttimeBreathingStatus({ breathing_disturbance_index: 7 }).level, 'occasional');
   assert.equal(getNighttimeBreathingStatus({ breathing_disturbance_index: 18 }).level, 'frequent');
+});
+
+test('nighttime breathing marker aligns status thresholds with gradient thirds', () => {
+  assert.equal(getNighttimeBreathingMarkerPosition(0), 0);
+  assert.equal(Math.round(getNighttimeBreathingMarkerPosition(5)), 33);
+  assert.equal(Math.round(getNighttimeBreathingMarkerPosition(10)), 50);
+  assert.equal(Math.round(getNighttimeBreathingMarkerPosition(15)), 67);
+  assert.equal(getNighttimeBreathingMarkerPosition(25), 100);
+});
+
+test('sleep timeline removes ticks that would overlap bedtime or wake-time labels', () => {
+  const ticks = getSleepTimelineTicks(
+    '2026-07-02T21:42:00-05:00',
+    '2026-07-03T04:40:00-05:00',
+  );
+  assert.deepEqual(ticks.map(tick => tick.label), ['9:42 pm', '12 am', '2 am', '4:40 am']);
 });

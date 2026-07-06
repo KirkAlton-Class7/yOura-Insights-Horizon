@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { calendarDates } from '../src/utils/dateService.js';
 import { getTrendPeriods, TREND_RANGE_CONFIG } from '../src/utils/trendRanges.js';
 
-test('shared trend ranges use 7 day, 4 week, and 3 month defaults with a 15-week maximum', () => {
-  assert.equal(TREND_RANGE_CONFIG.day.defaultValue, 7);
-  assert.equal(TREND_RANGE_CONFIG.week.defaultValue, 4);
+test('shared trend ranges use 14 day, 6 week, and 3 month defaults with a 15-week maximum', () => {
+  assert.equal(TREND_RANGE_CONFIG.day.defaultValue, 14);
+  assert.equal(TREND_RANGE_CONFIG.week.defaultValue, 6);
   assert.equal(TREND_RANGE_CONFIG.month.defaultValue, 3);
   assert.equal(TREND_RANGE_CONFIG.week.maximum, 15);
 });

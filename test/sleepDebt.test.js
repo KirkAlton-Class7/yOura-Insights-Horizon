@@ -4,6 +4,7 @@ import {
   calculateSleepDebt,
   formatSleepDebt,
   getSleepDebtCategory,
+  getSleepDebtMarkerPlacement,
 } from '../src/utils/sleepDebt.js';
 
 const sleepRecord = minutes => ({
@@ -45,6 +46,21 @@ test('sleep debt category boundaries match the four defined bands', () => {
   assert.equal(getSleepDebtCategory(2 * 60 * 60).label, 'Moderate');
   assert.equal(getSleepDebtCategory(5 * 60 * 60).label, 'Moderate');
   assert.equal(getSleepDebtCategory((5 * 60 * 60) + 60).label, 'High');
+});
+
+test('sleep debt marker uses category-local fourths for three severity levels', () => {
+  assert.deepEqual(getSleepDebtMarkerPlacement(0), {
+    categoryKey: 'none', categoryIndex: 0, severityLevel: 0, position: 0,
+  });
+  assert.equal(getSleepDebtMarkerPlacement(20 * 60).position, 25);
+  assert.equal(getSleepDebtMarkerPlacement(60 * 60).position, 50);
+  assert.equal(getSleepDebtMarkerPlacement(85 * 60).position, 75);
+  assert.equal(getSleepDebtMarkerPlacement(150 * 60).position, 25);
+  assert.equal(getSleepDebtMarkerPlacement(220 * 60).position, 50);
+  assert.equal(getSleepDebtMarkerPlacement(270 * 60).position, 75);
+  assert.equal(getSleepDebtMarkerPlacement(330 * 60).position, 25);
+  assert.equal(getSleepDebtMarkerPlacement(390 * 60).position, 50);
+  assert.equal(getSleepDebtMarkerPlacement(450 * 60).position, 75);
 });
 
 test('all sleep sessions for a day contribute to total sleep', () => {

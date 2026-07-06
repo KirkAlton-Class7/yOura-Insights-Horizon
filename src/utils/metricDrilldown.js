@@ -236,10 +236,11 @@ export function getMetricDrilldownSeries(appData, metricKey, mode, anchorDate, r
   });
 }
 
-export function shiftMetricDrilldownAnchor(anchorDate, mode, direction) {
-  if (mode === 'day') return calendarDates.addDays(anchorDate, direction * 7);
-  if (mode === 'week') return calendarDates.addDays(anchorDate, direction * 49);
-  if (mode === 'month') return calendarDates.addDateMonths(anchorDate, direction * 7);
+export function shiftMetricDrilldownAnchor(anchorDate, mode, direction, requestedRange) {
+  const range = requestedRange ?? METRIC_DRILLDOWN_RANGES[mode]?.defaultValue;
+  if (mode === 'day') return calendarDates.addDays(anchorDate, direction * range);
+  if (mode === 'week') return calendarDates.addDays(anchorDate, direction * range * 7);
+  if (mode === 'month') return calendarDates.addDateMonths(anchorDate, direction * range);
   throw new Error(`Unknown drilldown mode: ${mode}`);
 }
 

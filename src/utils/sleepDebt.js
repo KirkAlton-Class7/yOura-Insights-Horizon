@@ -98,12 +98,34 @@ export const formatSleepDebt = seconds => {
   return `${minutes}m`;
 };
 
-export const getSleepDebtMarkerPosition = debtSeconds => {
-  const hours = Math.max(0, Number(debtSeconds || 0)) / HOUR_SECONDS;
-  if (hours === 0) return 2;
-  if (hours < 2) return 2 + (hours / 2) * 23;
-  if (hours <= 5) return 27 + ((hours - 2) / 3) * 46;
-  return 75 + Math.min((hours - 5) / 3, 1) * 23;
+const MARKER_BANDS = Object.freeze({
+  low: Object.freeze({ minimum: 0, levelWidth: (2 * HOUR_SECONDS) / 3 }),
+  moderate: Object.freeze({ minimum: 2 * HOUR_SECONDS, levelWidth: HOUR_SECONDS }),
+  high: Object.freeze({ minimum: 5 * HOUR_SECONDS, levelWidth: HOUR_SECONDS }),
+});
+
+export const getSleepDebtMarkerPlacement = debtSeconds => {
+  const seconds = Math.max(0, Number(debtSeconds || 0));
+  const category = getSleepDebtCategory(seconds);
+  const categoryKey = Object.entries(SLEEP_DEBT_CATEGORIES)
+    .find(([, value]) => value === category)?.[0] || 'none';
+
+  if (categoryKey === 'none') {
+    return Object.freeze({ categoryKey, categoryIndex: 0, severityLevel: 0, position: 0 });
+  }
+
+  const band = MARKER_BANDS[categoryKey];
+  const severityLevel = Math.min(3, Math.max(
+    1,
+    Math.ceil((seconds - band.minimum) / band.levelWidth),
+  ));
+
+  return Object.freeze({
+    categoryKey,
+    categoryIndex: Object.keys(SLEEP_DEBT_CATEGORIES).indexOf(categoryKey),
+    severityLevel,
+    position: severityLevel * 25,
+  });
 };
 
 export function calculateSleepDebt(groupedSleepModel, selectedDate) {
