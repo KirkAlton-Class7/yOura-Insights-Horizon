@@ -55,12 +55,14 @@ const sessionSleepSeconds = record => (
       + Number(record?.light_sleep_duration || 0)
 );
 
+export const getDailySleepSeconds = records => (records || [])
+  .filter(hasValidSessionDuration)
+  .reduce((total, record) => total + sessionSleepSeconds(record), 0);
+
 const dailySleepTotals = groupedSleepModel => Object.entries(groupedSleepModel || {})
   .map(([date, records]) => ({
     date,
-    totalSleepSeconds: (records || [])
-      .filter(hasValidSessionDuration)
-      .reduce((total, record) => total + sessionSleepSeconds(record), 0),
+    totalSleepSeconds: getDailySleepSeconds(records),
   }))
   .filter(({ date, totalSleepSeconds }) => (
     calendarDates.isValidDate(date)

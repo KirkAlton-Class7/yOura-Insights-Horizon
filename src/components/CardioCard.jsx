@@ -3,9 +3,11 @@ import { useToast } from '../context/toast';
 import { METRIC_COLORS } from '../utils/colors';
 import { buildCardiovascularCardSnapshot } from '../utils/cardSnapshots';
 import UnavailableState from './UnavailableState';
+import { formatChartPointLabel, HtmlChartPointLabel, useChartPointLabel } from './ChartPointLabel';
 
 export default function CardioCard({ data, dateWindow, allData, selectedDate }) {
   const { showToast } = useToast();
+  const labelState = useChartPointLabel();
   const vasAge = data?.vascular_age ? Number(data.vascular_age) : null;
   const pwv = data?.pulse_wave_velocity ? Number(data.pulse_wave_velocity).toFixed(2) : null;
 
@@ -34,7 +36,25 @@ export default function CardioCard({ data, dateWindow, allData, selectedDate }) 
     const height = Math.max(6, Math.round(((v - minAge) / range) * 26) + 6);
     const isActive = d === selectedDate;
     return (
-      <div key={idx} className={`flex-1 flex flex-col items-end justify-end ${isActive ? 'active' : ''}`}>
+      <div
+        key={idx}
+        role="button"
+        tabIndex="0"
+        className={`relative flex flex-1 cursor-pointer flex-col items-end justify-end outline-none ${isActive ? 'active' : ''}`}
+        onClick={() => labelState.showClicked(d)}
+        onMouseEnter={() => labelState.showHovered(d)}
+        onMouseLeave={() => labelState.hideHovered(d)}
+        onFocus={() => labelState.showHovered(d)}
+        onBlur={() => labelState.hideHovered(d)}
+        onKeyDown={event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            labelState.showClicked(d);
+          }
+        }}
+        aria-label={`${formatChartPointLabel(d)}, vascular age ${v}`}
+      >
+        {d === labelState.activeKey && <HtmlChartPointLabel label={formatChartPointLabel(d)} fading={labelState.fading} className={`bottom-[calc(100%+0.35rem)] ${idx === 0 ? 'left-0' : idx === dateWindow.length - 1 ? 'right-0' : 'left-1/2 -translate-x-1/2'}`} />}
         <div className="w-full rounded-sm" style={{ height: `${height}px`, backgroundColor: METRIC_COLORS.cardiovascular, opacity: isActive ? 1 : 0.35 }} />
       </div>
     );

@@ -4,7 +4,7 @@ import ScoreRing from './ScoreRing';
 import { writeClipboardText } from '../utils/clipboard';
 import { useToast } from '../context/toast';
 
-export default function ScoreCard({ label, data, trendBars, weeklyScores }) {
+export default function ScoreCard({ label, data, trendBars, weeklyScores, onOpen }) {
   const { showToast } = useToast();
   const score = data?.score ?? null;
   const hasScore = score !== null && score !== undefined && score !== '' && Number.isFinite(Number(score));
@@ -34,15 +34,23 @@ export default function ScoreCard({ label, data, trendBars, weeklyScores }) {
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
+      {onOpen && (
+        <button
+          type="button"
+          onClick={onOpen}
+          className="absolute inset-0 z-10 rounded-2xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300"
+          aria-label={`Open ${label} details`}
+        />
+      )}
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500/0 via-cyan-500/50 to-purple-600/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="w-full flex justify-between items-center">
+      <div className="relative z-20 w-full flex justify-between items-center pointer-events-none">
         <span className="text-xs font-outfit font-semibold uppercase tracking-wider text-slate-300">
           {label}
         </span>
         <button
           type="button"
           onClick={handleCopyScores}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-slate-950/80 text-slate-400 opacity-0 shadow-lg backdrop-blur-sm transition-all hover:border-cyan-300/50 hover:text-cyan-200 group-hover:opacity-100 focus-visible:opacity-100"
+          className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-slate-950/80 text-slate-400 opacity-0 shadow-lg backdrop-blur-sm transition-all hover:border-cyan-300/50 hover:text-cyan-200 group-hover:opacity-100 focus-visible:opacity-100"
           title={`Copy ${label} weekly scores`}
           aria-label={`Copy ${label} weekly scores`}
         >
@@ -53,7 +61,7 @@ export default function ScoreCard({ label, data, trendBars, weeklyScores }) {
       {!hasScore && (
         <p className="-mt-2 text-center text-xs text-slate-500">No {label.toLowerCase()} score available for this date</p>
       )}
-      <div className="flex items-end gap-1 w-full h-8">
+      <div className="relative z-20 flex items-end gap-1 w-full h-8">
         {trendBars}
       </div>
     </motion.div>

@@ -8,9 +8,12 @@ import QuoteCard from '../components/QuoteCard';
 import ScoreSummaryGrid from '../components/ScoreSummaryGrid';
 import WearCoverageCard from '../components/WearCoverageCard';
 import CompareModal from '../components/CompareModal';
+import ReadinessDetailModal from '../components/ReadinessDetailModal';
+import SleepDetailModal from '../components/SleepDetailModal';
 import ReadinessCard from '../components/ReadinessCard';
 import SleepCard from '../components/SleepCard';
 import ActivityCard from '../components/ActivityCard';
+import ActivityDetailModal from '../components/ActivityDetailModal';
 import StressResilienceCard from '../components/StressResilienceCard';
 import CardioCard from '../components/CardioCard';
 import BiometricsCard from '../components/BiometricsCard';
@@ -27,6 +30,9 @@ export default function OuraDashboard() {
   const [availableDates, setAvailableDates] = useState([]);
   const [isDashboardVisible, setIsDashboardVisible] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [readinessDetailTarget, setReadinessDetailTarget] = useState(null);
+  const [sleepDetailTarget, setSleepDetailTarget] = useState(null);
+  const [activityDetailTarget, setActivityDetailTarget] = useState(null);
   const [areWidgetsHidden, setAreWidgetsHidden] = useState(false);
   const {
     selectedDate,
@@ -49,7 +55,7 @@ export default function OuraDashboard() {
     const loadManifest = async () => {
       try {
         const base = import.meta.env.BASE_URL || '/';
-        const res = await fetch(`${base}data/images/image_gallery/gallery-manifest.json`);
+        const res = await fetch(`${base}data/images/image_gallery/travel_destinations/gallery-manifest.json`);
         if (!res.ok) throw new Error('Manifest not found');
         const data = await res.json();
         setImageList(data);
@@ -102,6 +108,9 @@ export default function OuraDashboard() {
 
   const handleHome = useCallback(() => {
     setIsCompareOpen(false);
+    setReadinessDetailTarget(null);
+    setSleepDetailTarget(null);
+    setActivityDetailTarget(null);
     setAreWidgetsHidden(false);
     setAppData({});
     setAvailableDates([]);
@@ -191,6 +200,9 @@ export default function OuraDashboard() {
             selectedDate={selectedDate}
             dateWindow={dateWindow}
             onSelectDate={setSelectedDate}
+            onOpenReadiness={() => setReadinessDetailTarget('top')}
+            onOpenSleep={() => setSleepDetailTarget('top')}
+            onOpenActivity={() => setActivityDetailTarget('top')}
           />
 
           <section id="wear-coverage" className="scroll-mt-20">
@@ -199,7 +211,7 @@ export default function OuraDashboard() {
 
           <div className="space-y-6">
             <section id="readiness" className="scroll-mt-20">
-              <ReadinessCard data={readinessData} />
+              <ReadinessCard data={readinessData} onOpenDetails={setReadinessDetailTarget} />
             </section>
             <section id="sleep" className="scroll-mt-20">
               <SleepCard
@@ -208,10 +220,11 @@ export default function OuraDashboard() {
                 sleeptimeData={sleeptimeData}
                 allSleepmodelData={appData.sleepmodel}
                 selectedDate={selectedDate}
+                onOpenDetails={setSleepDetailTarget}
               />
             </section>
             <section id="activity" className="scroll-mt-20">
-              <ActivityCard data={activityData} />
+              <ActivityCard data={activityData} onOpenDetails={setActivityDetailTarget} />
             </section>
             <section id="stress-resilience" className="scroll-mt-20">
               <StressResilienceCard
@@ -245,6 +258,30 @@ export default function OuraDashboard() {
               availableDates={availableDates}
               initialDate={selectedDate}
               onClose={() => setIsCompareOpen(false)}
+            />
+          )}
+          {readinessDetailTarget && (
+            <ReadinessDetailModal
+              appData={appData}
+              selectedDate={selectedDate}
+              initialTarget={readinessDetailTarget}
+              onClose={() => setReadinessDetailTarget(null)}
+            />
+          )}
+          {sleepDetailTarget && (
+            <SleepDetailModal
+              appData={appData}
+              selectedDate={selectedDate}
+              initialTarget={sleepDetailTarget}
+              onClose={() => setSleepDetailTarget(null)}
+            />
+          )}
+          {activityDetailTarget && (
+            <ActivityDetailModal
+              appData={appData}
+              selectedDate={selectedDate}
+              initialTarget={activityDetailTarget}
+              onClose={() => setActivityDetailTarget(null)}
             />
           )}
         </AnimatePresence>

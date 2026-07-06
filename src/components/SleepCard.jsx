@@ -1,11 +1,15 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { Info } from 'lucide-react';
 import Card from './Card';
 import SubScoreBar from './SubScoreBar';
+import SleepStageTimeline from './SleepStageTimeline';
 import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
 import { buildSleepCardSnapshot } from '../utils/cardSnapshots';
 import UnavailableState from './UnavailableState';
 import { calendarDates } from '../utils/dateService';
+import { calculateSleepRegularity } from '../utils/sleepRegularity';
+import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
 import {
   SLEEP_DEBT_CATEGORIES,
   calculateSleepDebt,
@@ -13,7 +17,7 @@ import {
   getSleepDebtMarkerPosition,
 } from '../utils/sleepDebt';
 
-function SleepDebtSection({ sleepDebt }) {
+function SleepDebtSection({ sleepDebt, onOpen }) {
   if (!sleepDebt) {
     return (
       <UnavailableState
@@ -29,7 +33,11 @@ function SleepDebtSection({ sleepDebt }) {
 
   return (
     <section className="mt-4 border-t border-white/10 pt-4" aria-label="Estimated sleep debt">
-      <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4 sm:p-5">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="relative z-20 block w-full rounded-2xl border border-white/10 bg-slate-950/35 p-4 text-left transition-colors hover:bg-slate-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:p-5"
+      >
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">Sleep Debt</div>
         <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="font-outfit text-4xl font-light tabular-nums text-slate-100">
@@ -71,7 +79,7 @@ function SleepDebtSection({ sleepDebt }) {
         <p className="mt-3 text-[11px] text-slate-500">
           Estimated from exported sleep history · Sleep need {formatSleepDebt(sleepDebt.sleepNeedSeconds)} · {sleepDebt.recentNights} nights
         </p>
-      </div>
+      </button>
     </section>
   );
 }
@@ -82,9 +90,14 @@ export default function SleepCard({
   sleeptimeData,
   allSleepmodelData,
   selectedDate,
+  onOpenDetails,
 }) {
   const { showToast } = useToast();
   const { score, contributors } = data || {};
+  const openTarget = useCallback((event, target = 'top') => {
+    event.stopPropagation();
+    onOpenDetails?.(target);
+  }, [onOpenDetails]);
 
   const keys = ['deep_sleep', 'rem_sleep', 'total_sleep', 'efficiency', 'restfulness', 'latency', 'timing'];
 
@@ -97,6 +110,10 @@ export default function SleepCard({
   );
   const sleepDebt = useMemo(
     () => calculateSleepDebt(sleepHistory, sleepDate),
+    [sleepHistory, sleepDate],
+  );
+  const sleepRegularity = useMemo(
+    () => calculateSleepRegularity(sleepHistory, sleepDate),
     [sleepHistory, sleepDate],
   );
 
@@ -139,28 +156,28 @@ export default function SleepCard({
     };
 
     let cursor = 0;
-    const DEEP_C = '#3b82f6';
-    const REM_C = '#8b5cf6';
-    const LIGHT_C = '#06b6d4';
-    const AWAKE_C = 'rgba(255,255,255,0.15)';
+    const DEEP_C = SLEEP_STAGE_COLORS.deep;
+    const REM_C = SLEEP_STAGE_COLORS.rem;
+    const LIGHT_C = SLEEP_STAGE_COLORS.light;
+    const AWAKE_C = SLEEP_STAGE_COLORS.awake;
 
     const donutSVG = `
       <svg width="140" height="140" viewBox="0 0 140 140">
         <circle cx="70" cy="70" r="52" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>
-        ${donutArc(70,70,52, cursor, Math.max(0, deepP - gap), DEEP_C)}
-        ${(cursor += deepP, donutArc(70,70,52, cursor, Math.max(0, remP - gap), REM_C))}
+        ${donutArc(70,70,52, cursor, Math.max(0, awakeP - gap), AWAKE_C)}
+        ${(cursor += awakeP, donutArc(70,70,52, cursor, Math.max(0, remP - gap), REM_C))}
         ${(cursor += remP, donutArc(70,70,52, cursor, Math.max(0, lightP - gap), LIGHT_C))}
-        ${(cursor += lightP, donutArc(70,70,52, cursor, Math.max(0, awakeP - gap), AWAKE_C))}
+        ${(cursor += lightP, donutArc(70,70,52, cursor, Math.max(0, deepP - gap), DEEP_C))}
         <text x="70" y="64" text-anchor="middle" fill="white" font-size="18" font-weight="800" font-family="Outfit, ui-sans-serif, system-ui, sans-serif" style="font-variant-numeric:tabular-nums">${fmtDuration(total)}</text>
         <text x="70" y="80" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="10" font-family="DM Sans, ui-sans-serif, system-ui, sans-serif">asleep</text>
       </svg>
     `;
 
     const stageRows = [
-      { label: 'Deep', dur: deep, color: DEEP_C, pct: total ? deep / total : 0 },
+      { label: 'Awake', dur: awake, color: AWAKE_C, pct: tot4 ? awake / tot4 : 0 },
       { label: 'REM', dur: rem, color: REM_C, pct: total ? rem / total : 0 },
       { label: 'Light', dur: light, color: LIGHT_C, pct: total ? light / total : 0 },
-      { label: 'Awake', dur: awake, color: AWAKE_C, pct: tot4 ? awake / tot4 : 0 },
+      { label: 'Deep', dur: deep, color: DEEP_C, pct: total ? deep / total : 0 },
     ];
 
     const legend = stageRows.map(row => (
@@ -172,24 +189,20 @@ export default function SleepCard({
       </div>
     ));
 
-    // Hypnogram (simplified – just show colour blocks)
+    // Sleep-stage timeline uses the same vertical stage mapping as the drilldown.
     let hypnoHtml = null;
     const phaseStr = sleepModel.sleep_phase_5_min || sleepModel.sleep_phase_30_sec || '';
     if (phaseStr && phaseStr.length > 4) {
       const phases = phaseStr.split('').map(Number).filter(n => n >= 1 && n <= 4);
-      const stageColors = { 1: AWAKE_C, 2: LIGHT_C, 3: REM_C, 4: DEEP_C };
-      const blocks = phases.map((p, i) => (
-        <div key={i} className="flex-1 h-8" style={{ background: stageColors[p] || 'transparent' }} />
-      ));
       hypnoHtml = (
         <div className="mt-4">
           <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">Sleep Stages</div>
-          <div className="flex h-8 rounded overflow-hidden border border-white/5">
-            {blocks}
-          </div>
-          <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-            <span>{calendarDates.formatTimestampTime(sleepModel.bedtime_start)}</span>
-            <span>{calendarDates.formatTimestampTime(sleepModel.bedtime_end)}</span>
+          <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-950/25 px-1 sm:px-3">
+            <SleepStageTimeline
+              phases={phases}
+              startTimestamp={sleepModel.bedtime_start}
+              endTimestamp={sleepModel.bedtime_end}
+            />
           </div>
         </div>
       );
@@ -204,29 +217,49 @@ export default function SleepCard({
     const eff = sleepModel.efficiency ? Number(sleepModel.efficiency) + '%' : '--';
     const timeInBed = Number(sleepModel.time_in_bed || 0);
 
+    const metricItems = [
+      ['Total Sleep', fmtDuration(total), 'metric:totalSleep'],
+      ['Time in Bed', fmtDuration(timeInBed), 'metric:timeInBed'],
+      ['Resting HR', `${restingHR} bpm`, 'metric:restingHeartRate'],
+      ['Avg HR', `${avgHR} bpm`, 'top'],
+      ['Lowest HR', `${loHR} bpm`, 'metric:restingHeartRate'],
+      ['Avg HRV', `${avgHRV} ms`, 'metric:averageHrv'],
+      ['Breathing', `${avgBr} br/min`, 'metric:respiratoryRate'],
+      ['Efficiency', eff, 'metric:sleepEfficiency'],
+      ['Restless', sleepModel.restless_periods || '--', 'top'],
+    ];
+
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
-        <div className="mb-3 text-xs text-slate-500 uppercase tracking-wider">Sleep Stages</div>
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div dangerouslySetInnerHTML={{ __html: donutSVG }} />
-          <div className="flex-1 space-y-1">{legend}</div>
-        </div>
-        {hypnoHtml}
+        <button
+          type="button"
+          onClick={event => openTarget(event, 'stages')}
+          className="relative z-20 block w-full rounded-xl p-2 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+        >
+          <div className="mb-3 text-xs text-slate-500 uppercase tracking-wider">Sleep Stages</div>
+          <div className="flex flex-col items-center gap-4 sm:flex-row">
+            <div dangerouslySetInnerHTML={{ __html: donutSVG }} />
+            <div className="flex-1 space-y-1">{legend}</div>
+          </div>
+          {hypnoHtml}
+        </button>
         <div className="mt-5 text-xs text-slate-500 uppercase tracking-wider">Key Metrics</div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-4 mt-3 text-xs sm:grid-cols-3">
-          <div><span className="text-slate-500">Total Sleep</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{fmtDuration(total)}</span></div>
-          <div><span className="text-slate-500">Time in Bed</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{fmtDuration(timeInBed)}</span></div>
-          <div><span className="text-slate-500">Resting HR</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{restingHR} bpm</span></div>
-          <div><span className="text-slate-500">Avg HR</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgHR} bpm</span></div>
-          <div><span className="text-slate-500">Lowest HR</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{loHR} bpm</span></div>
-          <div><span className="text-slate-500">Avg HRV</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgHRV} ms</span></div>
-          <div><span className="text-slate-500">Breathing</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{avgBr} br/min</span></div>
-          <div><span className="text-slate-500">Efficiency</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{eff}</span></div>
-          <div><span className="text-slate-500">Restless</span><br /><span className="font-outfit font-semibold tabular-nums text-white">{sleepModel.restless_periods || '--'}</span></div>
+          {metricItems.map(([label, value, target]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={event => openTarget(event, target)}
+              className="relative z-20 rounded-xl p-2 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            >
+              <span className="text-slate-500">{label}</span><br />
+              <span className="font-outfit font-semibold tabular-nums text-white">{value}</span>
+            </button>
+          ))}
         </div>
       </div>
     );
-  }, [sleepModel]);
+  }, [sleepModel, openTarget]);
 
   // Optimal bedtime window
   const bedtimeWindow = useMemo(() => {
@@ -257,6 +290,8 @@ export default function SleepCard({
       snapshotLabel="Sleep snapshot"
       onCopyFailure={() => showToast('Failed to copy Sleep snapshot.')}
       onCopySuccess={() => showToast('Sleep snapshot copied to clipboard.')}
+      onOpen={() => onOpenDetails?.('top')}
+      openLabel="Open Sleep details"
     >
       <div className="space-y-4">
         {data ? (
@@ -271,6 +306,7 @@ export default function SleepCard({
                   key={key}
                   label={key.replace(/_/g, ' ')}
                   value={contributors?.[key]}
+                  onOpen={event => openTarget(event, `metric:${key === 'deep_sleep' ? 'deepSleepContributor' : key === 'rem_sleep' ? 'remSleepContributor' : key === 'total_sleep' ? 'totalSleepContributor' : key === 'efficiency' ? 'efficiencyContributor' : key === 'restfulness' ? 'restfulnessContributor' : key === 'latency' ? 'latencyContributor' : 'timingContributor'}`)}
                 />
               ))}
             </div>
@@ -281,7 +317,28 @@ export default function SleepCard({
         {stagesHtml || (
           <UnavailableState title="Sleep stages and HR unavailable" description="No sleep-model data was available for this date." compact />
         )}
-        <SleepDebtSection sleepDebt={sleepDebt} />
+        {sleepRegularity ? (
+          <section className="mt-4 border-t border-white/10 pt-4" aria-label="Sleep regularity">
+            <button
+              type="button"
+              onClick={event => openTarget(event, 'regularity')}
+              className="relative z-20 block w-full rounded-2xl border border-white/10 bg-slate-950/35 p-4 text-left transition-colors hover:bg-slate-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:p-5"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">Sleep Regularity</div>
+                  <div className="mt-2 font-outfit text-3xl font-light" style={{ color: sleepRegularity.color }}>
+                    {sleepRegularity.status}
+                  </div>
+                </div>
+                <Info className="h-5 w-5 text-slate-400" aria-hidden="true" />
+              </div>
+            </button>
+          </section>
+        ) : (
+          <UnavailableState title="Sleep regularity unavailable" description="At least five nights with bed and wake times are required." compact />
+        )}
+        <SleepDebtSection sleepDebt={sleepDebt} onOpen={event => openTarget(event, 'debt')} />
         {bedtimeWindow || (
           <UnavailableState title="Optimal bedtime unavailable" description="No optimal-bedtime data was available for this date." compact />
         )}

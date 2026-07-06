@@ -6,6 +6,10 @@ const MONTHS_LONG = Object.freeze([
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ]);
+const MONTHS_SHORT = Object.freeze([
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+]);
 
 const systemClock = Object.freeze({
   instant: () => Temporal.Now.instant(),
@@ -17,6 +21,12 @@ const formatClockTime = ({ hour, minute }) => {
   const period = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour % 12 || 12;
   return `${String(displayHour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${period}`;
+};
+
+const formatAxisClockTime = ({ hour, minute }) => {
+  const period = hour >= 12 ? 'pm' : 'am';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}${minute ? `:${String(minute).padStart(2, '0')}` : ''} ${period}`;
 };
 
 const offsetTimeZone = (seconds) => {
@@ -45,6 +55,8 @@ export function createDateService({ clock = systemClock, timeZone = systemTimeZo
       dateKey: dateKey(date),
       dayOfMonth: date.day,
       month: date.month,
+      monthShort: MONTHS_SHORT[date.month - 1],
+      monthLong: MONTHS_LONG[date.month - 1],
       year: date.year,
       weekdayIndex: index,
       weekdayShort: WEEKDAYS_SHORT[index],
@@ -93,6 +105,35 @@ export function createDateService({ clock = systemClock, timeZone = systemTimeZo
     }
   };
 
+  const getTimeAxisTicks = (startValue, endValue, intervalHours = 2) => {
+    try {
+      const startInstant = Temporal.Instant.from(startValue);
+      const endInstant = Temporal.Instant.from(endValue);
+      const durationMilliseconds = endInstant.epochMilliseconds - startInstant.epochMilliseconds;
+      if (durationMilliseconds <= 0) return Object.freeze([]);
+
+      const start = startInstant.toZonedDateTimeISO(timeZone);
+      const end = endInstant.toZonedDateTimeISO(timeZone);
+      const ticks = [{ position: 0, label: formatAxisClockTime(start) }];
+      let next = start.round({ smallestUnit: 'hour', roundingMode: 'ceil' });
+      if (Temporal.ZonedDateTime.compare(next, start) <= 0) next = next.add({ hours: 1 });
+      const remainder = next.hour % intervalHours;
+      if (remainder) next = next.add({ hours: intervalHours - remainder });
+
+      while (Temporal.ZonedDateTime.compare(next, end) < 0) {
+        ticks.push({
+          position: (next.toInstant().epochMilliseconds - startInstant.epochMilliseconds) / durationMilliseconds,
+          label: formatAxisClockTime(next),
+        });
+        next = next.add({ hours: intervalHours });
+      }
+      ticks.push({ position: 1, label: formatAxisClockTime(end) });
+      return Object.freeze(ticks.map(tick => Object.freeze(tick)));
+    } catch {
+      return Object.freeze([]);
+    }
+  };
+
   const formatOptimalBedtime = (day, optimalBedtime) => {
     if (!day || !optimalBedtime) return null;
     try {
@@ -111,6 +152,7 @@ export function createDateService({ clock = systemClock, timeZone = systemTimeZo
 
   return Object.freeze({
     addDays: (value, days) => parseDate(value).add({ days }).toString(),
+    addDateMonths: (value, months) => parseDate(value).add({ months }).toString(),
     addMonths: (value, months) => parseMonth(value).add({ months }).toString(),
     addYears: (value, years) => parseMonth(value).add({ years }).toString(),
     formatCurrentDateTime: () => {
@@ -125,6 +167,14 @@ export function createDateService({ clock = systemClock, timeZone = systemTimeZo
     formatTimestampTime,
     getDatePresentation,
     getMonthCells,
+    getMonthRange: value => {
+      const month = parseMonth(value);
+      return Object.freeze({
+        startDate: month.toPlainDate({ day: 1 }).toString(),
+        endDate: month.toPlainDate({ day: month.daysInMonth }).toString(),
+      });
+    },
+    getTimeAxisTicks,
     getWeekDates,
     getWeekday: value => weekdayIndex(parseDate(value)),
     getYearMonthPresentation,

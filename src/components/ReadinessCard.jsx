@@ -5,7 +5,7 @@ import { buildReadinessCardSnapshot } from '../utils/cardSnapshots';
 import { useToast } from '../context/toast';
 import UnavailableState from './UnavailableState';
 
-export default function ReadinessCard({ data }) {
+export default function ReadinessCard({ data, onOpenDetails }) {
   const { showToast } = useToast();
   if (!data) {
     return (
@@ -21,6 +21,15 @@ export default function ReadinessCard({ data }) {
     : Number(temperature_deviation) < -0.5
       ? SEMANTIC_COLORS.optimal
       : SEMANTIC_COLORS.good;
+  const contributorTargets = {
+    hrv_balance: 'metric:averageHrv',
+    resting_heart_rate: 'metric:restingHeartRate',
+    body_temperature: 'metric:bodyTemperature',
+  };
+  const openTarget = (event, target = 'top') => {
+    event.stopPropagation();
+    onOpenDetails?.(target);
+  };
 
   return (
     <Card
@@ -30,6 +39,8 @@ export default function ReadinessCard({ data }) {
       snapshotLabel="Readiness snapshot"
       onCopyFailure={() => showToast('Failed to copy Readiness snapshot.')}
       onCopySuccess={() => showToast('Readiness snapshot copied to clipboard.')}
+      onOpen={() => onOpenDetails?.('top')}
+      openLabel="Open Readiness details"
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -42,18 +53,23 @@ export default function ReadinessCard({ data }) {
               key={key}
               label={key.replace(/_/g, ' ')}
               value={contributors?.[key]}
+              onOpen={event => openTarget(event, contributorTargets[key])}
             />
           ))}
         </div>
         {temperature_deviation !== undefined && (
-          <div className="mt-4 pt-4 border-t border-white/10">
+          <button
+            type="button"
+            onClick={event => openTarget(event, 'metric:bodyTemperature')}
+            className="relative z-20 mt-4 w-full rounded-xl border-t border-white/10 px-2 pt-4 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+          >
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">Temperature Deviation</span>
               <span className="font-outfit font-semibold tabular-nums" style={{ color: temperatureColor }}>
                 {Number(temperature_deviation).toFixed(2)}°C
               </span>
             </div>
-          </div>
+          </button>
         )}
       </div>
     </Card>

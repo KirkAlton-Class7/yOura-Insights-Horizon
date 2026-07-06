@@ -56,3 +56,15 @@ test('date-only weeks are unaffected by daylight-saving transitions', () => {
     '2024-11-07', '2024-11-08', '2024-11-09',
   ]);
 });
+
+test('time axes include correctly positioned even-hour ticks', () => {
+  const dates = createDateService({ timeZone: 'America/Chicago' });
+  const ticks = dates.getTimeAxisTicks(
+    '2026-07-03T06:38:00-05:00',
+    '2026-07-03T11:36:00-05:00',
+  );
+  assert.deepEqual(ticks.map(tick => tick.label), ['6:38 am', '8 am', '10 am', '11:36 am']);
+  assert.equal(ticks[0].position, 0);
+  assert.equal(ticks[3].position, 1);
+  assert.equal(ticks[1].position > 0 && ticks[1].position < ticks[2].position, true);
+});

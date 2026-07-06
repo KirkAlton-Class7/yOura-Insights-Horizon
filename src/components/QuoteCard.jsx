@@ -52,6 +52,15 @@ export default function QuoteCard({ onCopyFailure, onCopySuccess }) {
     loadQuotes();
   }, []);
 
+  useEffect(() => {
+    if (!showFavorites) return undefined;
+    const closeOnEscape = event => {
+      if (event.key === 'Escape') setShowFavorites(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [showFavorites]);
+
   const saved = currentQuote
     ? favorites.some(quote => getQuoteKey(quote) === getQuoteKey(currentQuote))
     : false;
@@ -216,11 +225,11 @@ export default function QuoteCard({ onCopyFailure, onCopySuccess }) {
 
       {/* Favorites Modal */}
       {showFavorites && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowFavorites(false)}>
-          <div className="bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <h2 className="text-lg font-semibold text-slate-100">⭐ Favorite Quotes</h2>
-              <button onClick={() => setShowFavorites(false)} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
+              <button onClick={() => setShowFavorites(false)} className="p-1 rounded-lg hover:bg-white/10 transition-colors" aria-label="Close favorite quotes">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>

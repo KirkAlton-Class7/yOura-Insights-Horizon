@@ -11,6 +11,8 @@ export default function Card({
   snapshotLabel = 'widget snapshot',
   onCopyFailure,
   onCopySuccess,
+  onOpen,
+  openLabel,
 }) {
   const handleCopySnapshot = async (event) => {
     event.preventDefault();
@@ -44,6 +46,15 @@ export default function Card({
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-cyan-500/5 to-purple-600/5 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-purple-500/5 to-pink-600/5 rounded-full blur-3xl"></div>
       </div>
+
+      {onOpen && (
+        <button
+          type="button"
+          onClick={onOpen}
+          className="absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300"
+          aria-label={openLabel || `Open ${title || 'card'} details`}
+        />
+      )}
 
       {snapshotText && (
         <button

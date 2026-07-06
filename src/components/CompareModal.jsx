@@ -21,7 +21,6 @@ export default function CompareModal({ appData, availableDates, initialDate, onC
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onMouseDown={onClose}
     >
       <motion.div
         role="dialog"

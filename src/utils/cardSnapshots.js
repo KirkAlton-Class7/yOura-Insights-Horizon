@@ -1,6 +1,7 @@
 import { formatWearDuration, getWearCoverage } from './wearCoverage.js';
 import { calendarDates } from './dateService.js';
 import { calculateSleepDebt, formatSleepDebt } from './sleepDebt.js';
+import { calculateSleepRegularity } from './sleepRegularity.js';
 
 const READINESS_CONTRIBUTORS = [
   ['hrv_balance', 'HRV Balance'],
@@ -155,6 +156,15 @@ export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, opti
   }
 
   const sleepHistory = options.allSleepmodelData || (date ? { [date]: sleepmodelData || [] } : {});
+  const sleepRegularity = calculateSleepRegularity(sleepHistory, date);
+  sections.push(section('Sleep Regularity', sleepRegularity ? [
+    `Status: ${sleepRegularity.status}`,
+    `Consistency Score: ${sleepRegularity.score}/100`,
+    `Recent Nights: ${sleepRegularity.nights}`,
+  ] : [
+    'Status: At least five nights with bed and wake times are required.',
+  ]));
+
   const sleepDebt = calculateSleepDebt(sleepHistory, date);
   sections.push(section('Sleep Debt', sleepDebt ? [
     `Estimated Debt: ${formatSleepDebt(sleepDebt.debtSeconds)}`,
