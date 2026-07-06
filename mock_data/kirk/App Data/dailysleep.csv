@@ -1,0 +1,7 @@
+id;contributors;day;score;timestamp
+afada572-349e-48a3-9933-c7276f3a7ae7;"{""deep_sleep"": 97, ""efficiency"": 96, ""latency"": 75, ""rem_sleep"": 96, ""restfulness"": 69, ""timing"": 74, ""total_sleep"": 97}";2026-06-28;88;2026-06-28T00:00:00.000+00:00
+af96b5c4-a7d4-4eaf-98a5-49febbafb41e;"{""deep_sleep"": 96, ""efficiency"": 99, ""latency"": 94, ""rem_sleep"": 95, ""restfulness"": 79, ""timing"": 32, ""total_sleep"": 89}";2026-06-29;85;2026-06-29T00:00:00.000+00:00
+7c19a6b2-d9bb-4479-857f-d99a2d878788;"{""deep_sleep"": 96, ""efficiency"": 99, ""latency"": 94, ""rem_sleep"": 97, ""restfulness"": 81, ""timing"": 72, ""total_sleep"": 99}";2026-06-30;93;2026-06-30T00:00:00.000+00:00
+13336360-22a5-462d-9f4e-26982df15c06;"{""deep_sleep"": 86, ""efficiency"": 93, ""latency"": 83, ""rem_sleep"": 75, ""restfulness"": 63, ""timing"": 60, ""total_sleep"": 75}";2026-07-01;76;2026-07-01T00:00:00.000+00:00
+069eee1f-15ed-4e2a-a906-1134ab282e3a;"{""deep_sleep"": 96, ""efficiency"": 99, ""latency"": 97, ""rem_sleep"": 100, ""restfulness"": 74, ""timing"": 72, ""total_sleep"": 92}";2026-07-02;90;2026-07-02T00:00:00.000+00:00
+474798bd-ef86-4fc0-a92b-c3e717fbee85;"{""deep_sleep"": 83, ""efficiency"": 98, ""latency"": 99, ""rem_sleep"": 64, ""restfulness"": 84, ""timing"": 1, ""total_sleep"": 42}";2026-07-03;62;2026-07-03T00:00:00.000+00:00

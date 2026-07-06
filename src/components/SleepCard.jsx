@@ -1,12 +1,44 @@
 import { useCallback, useMemo } from 'react';
 import Card from './Card';
 import SubScoreBar from './SubScoreBar';
-import SleepStageTimeline from './SleepStageTimeline';
 import { useToast } from '../context/toast';
 import { getScoreColor } from '../utils/colors';
 import { buildSleepCardSnapshot } from '../utils/cardSnapshots';
 import UnavailableState from './UnavailableState';
 import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
+
+const SLEEP_CONTRIBUTOR_KEYS = Object.freeze(['deep_sleep', 'rem_sleep', 'total_sleep', 'efficiency', 'restfulness', 'latency', 'timing']);
+
+const formatSeconds = (secs) => {
+  if (!secs) return '0m';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+};
+
+const displayNumber = value => {
+  const number = Number(value);
+  return Number.isFinite(number) ? String(Math.round(number)) : '--';
+};
+
+function MetricWidget({ label, value, unit, onOpen }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="relative z-20 rounded-xl bg-white/5 p-4 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+      aria-label={`Open ${label} trends`}
+    >
+      <p className="text-xs uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="mt-2 font-outfit text-xl font-semibold tabular-nums text-slate-100">
+        {value}
+        {value !== '--' && unit ? <span className="ml-1 text-sm text-slate-400">{unit}</span> : null}
+      </p>
+    </button>
+  );
+}
 
 export default function SleepCard({
   data,
@@ -23,9 +55,7 @@ export default function SleepCard({
     onOpenDetails?.(target);
   }, [onOpenDetails]);
 
-  const keys = ['deep_sleep', 'rem_sleep', 'total_sleep', 'efficiency', 'restfulness', 'latency', 'timing'];
-
-  // Sleep stage donut and hypnogram generation (similar to static version)
+  // Sleep stage donut generation (similar to static version)
   const sleepModel = sleepmodelData?.find(r => r.type === 'long_sleep') || sleepmodelData?.[0] || null;
   const sleepDate = selectedDate || data?.day || sleepModel?.day || sleeptimeData?.day;
   const sleepHistory = useMemo(
@@ -40,15 +70,6 @@ export default function SleepCard({
     const light = Number(sleepModel.light_sleep_duration || 0);
     const awake = Number(sleepModel.awake_time || 0);
     const total = deep + rem + light;
-
-    const fmtDuration = (secs) => {
-      if (!secs) return '0m';
-      const h = Math.floor(secs / 3600);
-      const m = Math.floor((secs % 3600) / 60);
-      if (h > 0 && m > 0) return `${h}h ${m}m`;
-      if (h > 0) return `${h}h`;
-      return `${m}m`;
-    };
 
     const tot4 = deep + rem + light + awake || 1;
     const deepP = deep / tot4;
@@ -84,7 +105,7 @@ export default function SleepCard({
         ${(cursor += awakeP, donutArc(70,70,52, cursor, Math.max(0, remP - gap), REM_C))}
         ${(cursor += remP, donutArc(70,70,52, cursor, Math.max(0, lightP - gap), LIGHT_C))}
         ${(cursor += lightP, donutArc(70,70,52, cursor, Math.max(0, deepP - gap), DEEP_C))}
-        <text x="70" y="64" text-anchor="middle" fill="white" font-size="18" font-weight="800" font-family="Outfit, ui-sans-serif, system-ui, sans-serif" style="font-variant-numeric:tabular-nums">${fmtDuration(total)}</text>
+        <text x="70" y="64" text-anchor="middle" fill="white" font-size="18" font-weight="800" font-family="Outfit, ui-sans-serif, system-ui, sans-serif" style="font-variant-numeric:tabular-nums">${formatSeconds(total)}</text>
         <text x="70" y="80" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="10" font-family="DM Sans, ui-sans-serif, system-ui, sans-serif">asleep</text>
       </svg>
     `;
@@ -100,29 +121,10 @@ export default function SleepCard({
       <div key={row.label} className="flex items-center gap-3">
         <div className="w-2.5 h-2.5 rounded-full" style={{ background: row.color }} />
         <span className="text-xs text-slate-400 w-12">{row.label}</span>
-        <span className="ml-auto text-xs font-outfit font-semibold tabular-nums text-white">{fmtDuration(row.dur)}</span>
+        <span className="ml-auto text-xs font-outfit font-semibold tabular-nums text-white">{formatSeconds(row.dur)}</span>
         <span className="text-xs text-slate-500 w-10 text-right">{Math.round(row.pct * 100)}%</span>
       </div>
     ));
-
-    // Sleep-stage timeline uses the same vertical stage mapping as the drilldown.
-    let hypnoHtml = null;
-    const phaseStr = sleepModel.sleep_phase_5_min || sleepModel.sleep_phase_30_sec || '';
-    if (phaseStr && phaseStr.length > 4) {
-      const phases = phaseStr.split('').map(Number).filter(n => n >= 1 && n <= 4);
-      hypnoHtml = (
-        <div className="mt-4">
-          <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">Sleep Stages</div>
-          <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-950/25 px-1 sm:px-3">
-            <SleepStageTimeline
-              phases={phases}
-              startTimestamp={sleepModel.bedtime_start}
-              endTimestamp={sleepModel.bedtime_end}
-            />
-          </div>
-        </div>
-      );
-    }
 
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
@@ -136,11 +138,21 @@ export default function SleepCard({
             <div dangerouslySetInnerHTML={{ __html: donutSVG }} />
             <div className="flex-1 space-y-1">{legend}</div>
           </div>
-          {hypnoHtml}
         </button>
       </div>
     );
   }, [sleepModel, openTarget]);
+
+  const keyMetrics = sleepModel ? {
+    totalSleep: formatSeconds(Number(sleepModel.total_sleep_duration || 0) || (
+      Number(sleepModel.deep_sleep_duration || 0)
+      + Number(sleepModel.rem_sleep_duration || 0)
+      + Number(sleepModel.light_sleep_duration || 0)
+    )),
+    timeInBed: formatSeconds(Number(sleepModel.time_in_bed || 0)),
+    restingHeartRate: displayNumber(sleepModel.resting_heart_rate ?? sleepModel.lowest_heart_rate),
+    averageHrv: displayNumber(sleepModel.average_hrv),
+  } : null;
 
   const hasAnySleepData = Boolean(data || sleepModel || sleeptimeData?.optimal_bedtime);
 
@@ -166,7 +178,7 @@ export default function SleepCard({
               <span className="text-2xl font-outfit font-bold tabular-nums" style={{ color: getScoreColor(score) }}>{score ?? '--'}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {keys.map((key) => (
+              {SLEEP_CONTRIBUTOR_KEYS.map((key) => (
                 <SubScoreBar
                   key={key}
                   label={key.replace(/_/g, ' ')}
@@ -181,6 +193,17 @@ export default function SleepCard({
         )}
         {stagesHtml || (
           <UnavailableState title="Sleep stages and HR unavailable" description="No sleep-model data was available for this date." compact />
+        )}
+        {keyMetrics && (
+          <div className="border-t border-white/10 pt-4">
+            <p className="mb-3 text-xs uppercase tracking-wider text-slate-500">Key Metrics</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <MetricWidget label="Total Sleep" value={keyMetrics.totalSleep} onOpen={event => openTarget(event, 'metric:totalSleep')} />
+              <MetricWidget label="Time in Bed" value={keyMetrics.timeInBed} onOpen={event => openTarget(event, 'metric:timeInBed')} />
+              <MetricWidget label="Resting HR" value={keyMetrics.restingHeartRate} unit="bpm" onOpen={event => openTarget(event, 'metric:restingHeartRate')} />
+              <MetricWidget label="Avg HRV" value={keyMetrics.averageHrv} unit="ms" onOpen={event => openTarget(event, 'metric:averageHrv')} />
+            </div>
+          </div>
         )}
       </div>
     </Card>

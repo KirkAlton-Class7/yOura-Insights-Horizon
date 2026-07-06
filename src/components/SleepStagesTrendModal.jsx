@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import CalendarPicker from './CalendarPicker';
-import { formatChartPointLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
+import { formatChartPointLabel, SvgChartAxisLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
 import TrendPeriodFooter from './TrendPeriodFooter';
 import UnavailableState from './UnavailableState';
 import { calendarDates } from '../utils/dateService';
@@ -14,6 +14,7 @@ import { getSleepStageTrendSeries, shiftSleepStageAnchor } from '../utils/sleepS
 import { METRIC_DRILLDOWN_RANGES } from '../utils/metricDrilldown';
 import { TREND_DEFAULT_RANGES } from '../utils/trendRanges';
 import { useToast } from '../context/toast';
+import useSwipePaging from '../hooks/useSwipePaging';
 
 const MODES = Object.freeze([['day', 'Day'], ['week', 'Week'], ['month', 'Month']]);
 const PERIOD_KINDS = Object.freeze({ day: 'dayToDay', week: 'weekToWeek', month: 'monthToMonth' });
@@ -99,9 +100,7 @@ function StackedChart({ series, selectedKey, onSelect }) {
           );
         })}
         {series.points.map((point, index) => (
-          <text key={point.key} x={xFor(index)} y={height - 28} textAnchor="middle" fill={point.key === selectedKey ? '#67e8f9' : 'rgba(148,163,184,0.75)'} fontSize="16" fontWeight={point.key === selectedKey ? '700' : '500'}>
-            {point.label}
-          </text>
+          <SvgChartAxisLabel key={point.key} x={xFor(index)} y={height - 46} chartKey={point.key} fallback={point.label} active={point.key === selectedKey} />
         ))}
         {series.points.map((point, index) => point.stages && point.key === labelState.activeKey ? (
           <SvgChartPointLabel key={`label-${point.key}`} x={xFor(index)} y={yFor(boundaries.awake[index])} label={formatChartPointLabel(point.key, point.label)} chartWidth={width} chartHeight={height} fading={labelState.fading} />
@@ -142,6 +141,8 @@ function SleepStagesTrendContent({ appData, initialDate, onClose }) {
     : null;
   const canPrevious = Boolean(availableDates[0] && availableDates[0] < series.windowStart);
   const canNext = Boolean(availableDates[availableDates.length - 1] && availableDates[availableDates.length - 1] > series.windowEnd);
+  const shift = direction => setAnchorDate(date => shiftSleepStageAnchor(date, mode, direction, ranges[mode]));
+  const swipePaging = useSwipePaging({ canPrevious, canNext, onPrevious: () => shift(-1), onNext: () => shift(1) });
 
   useEffect(() => {
     const closeOnEscape = event => {
@@ -181,6 +182,7 @@ function SleepStagesTrendContent({ appData, initialDate, onClose }) {
     <motion.div
       className="fixed inset-0 z-[190] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onMouseDown={onClose}
       data-sleep-stages-dialog="true"
     >
       <motion.div
@@ -214,10 +216,10 @@ function SleepStagesTrendContent({ appData, initialDate, onClose }) {
           <p className="font-outfit text-5xl font-light tabular-nums text-slate-100 sm:text-6xl">
             {selected ? formatSleepDuration(selected.totalSleep * 3600) : '--'}
           </p>
-          <div className="flex items-center gap-2">
-            <button type="button" disabled={!canPrevious} onClick={() => setAnchorDate(date => shiftSleepStageAnchor(date, mode, -1, ranges[mode]))} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Previous ${mode} sleep stages`}><ChevronLeft className="mx-auto h-5 w-5" /></button>
+          <div className="flex touch-pan-y items-center gap-2" {...swipePaging}>
+            <button type="button" disabled={!canPrevious} onClick={() => shift(-1)} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Previous ${mode} sleep stages`}><ChevronLeft className="mx-auto h-5 w-5" /></button>
             <div className="min-w-0 flex-1"><StackedChart series={series} selectedKey={effectiveSelectedKey} onSelect={setSelectedPointKey} /></div>
-            <button type="button" disabled={!canNext} onClick={() => setAnchorDate(date => shiftSleepStageAnchor(date, mode, 1, ranges[mode]))} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Next ${mode} sleep stages`}><ChevronRight className="mx-auto h-5 w-5" /></button>
+            <button type="button" disabled={!canNext} onClick={() => shift(1)} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Next ${mode} sleep stages`}><ChevronRight className="mx-auto h-5 w-5" /></button>
           </div>
           <TrendPeriodFooter kind={PERIOD_KINDS[mode]} startDate={series.windowStart} endDate={series.windowEnd} summary={footerSummary} />
         </div>

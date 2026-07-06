@@ -5,13 +5,13 @@ import { SEMANTIC_COLORS } from '../utils/colors';
 import { buildWearCoverageCardSnapshot } from '../utils/cardSnapshots';
 import { formatWearDuration, getWearCoverage } from '../utils/wearCoverage';
 
-export default function WearCoverageCard({ data, selectedDate }) {
+export default function WearCoverageCard({ data, selectedDate, onOpenDetails }) {
   const { showToast } = useToast();
   const result = getWearCoverage(data);
 
   if (!result.available) {
     return (
-      <Card title="Ring Wear Coverage" subtitle="Daily non-wear time and data completeness">
+      <Card title="Ring Wear Coverage" subtitle="Daily non-wear time and data completeness" onOpen={onOpenDetails} openLabel="Open Ring Wear Coverage details">
         <UnavailableState
           title="Wear coverage unavailable"
           description="No Daily Activity non-wear data was available for this date."
@@ -36,6 +36,8 @@ export default function WearCoverageCard({ data, selectedDate }) {
       snapshotLabel="Ring Wear Coverage snapshot"
       onCopyFailure={() => showToast('Failed to copy Ring Wear Coverage snapshot.')}
       onCopySuccess={() => showToast('Ring Wear Coverage snapshot copied to clipboard.')}
+      onOpen={onOpenDetails}
+      openLabel="Open Ring Wear Coverage details"
     >
       <div className="space-y-5">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

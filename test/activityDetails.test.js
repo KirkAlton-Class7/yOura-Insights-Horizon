@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getDailyActivityBenefits, getDailyHeartRateZoneMinutes, getDailyMovementBuckets, getGoalProgress, getWeeklyActivityBenefits } from '../src/utils/activityDetails.js';
+import { getActivityIntensityDurations, getDailyActivityBenefits, getDailyHeartRateZoneMinutes, getDailyMovementBuckets, getGoalProgress, getWeeklyActivityBenefits } from '../src/utils/activityDetails.js';
 
 test('daily movement uses 24 fixed hourly buckets when class data exists', () => {
   const record = {
@@ -21,6 +21,21 @@ test('daily movement falls back to one honest daily total without intraday class
 test('goal progress compares active calories with the exported target', () => {
   assert.equal(getGoalProgress({ active_calories: 450, target_calories: 600 }), 75);
   assert.equal(getGoalProgress({ active_calories: 450 }), null);
+});
+
+test('activity intensity preserves exported vigorous, moderate, light, and sedentary durations', () => {
+  const durations = getActivityIntensityDurations({
+    high_activity_time: 900,
+    medium_activity_time: 1800,
+    low_activity_time: 3600,
+    sedentary_time: 7200,
+  });
+  assert.deepEqual(durations.map(item => [item.key, item.seconds]), [
+    ['vigorous', 900],
+    ['moderate', 1800],
+    ['light', 3600],
+    ['sedentary', 7200],
+  ]);
 });
 
 test('weekly benefits use the supplied metabolic and cardiovascular zone boundaries', () => {

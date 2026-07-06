@@ -22,6 +22,24 @@ export const READINESS_DRILLDOWN_METRICS = Object.freeze({
     source: 'sleepmodel',
     value: record => record?.average_hrv,
   }),
+  averageHeartRate: Object.freeze({
+    key: 'averageHeartRate',
+    title: 'Average Heart Rate',
+    unit: 'bpm',
+    precision: 0,
+    axisStep: 5,
+    source: 'sleepmodel',
+    value: record => record?.average_heart_rate,
+  }),
+  lowestHeartRate: Object.freeze({
+    key: 'lowestHeartRate',
+    title: 'Lowest Heart Rate',
+    unit: 'bpm',
+    precision: 0,
+    axisStep: 5,
+    source: 'sleepmodel',
+    value: record => record?.lowest_heart_rate,
+  }),
   bodyTemperature: Object.freeze({
     key: 'bodyTemperature',
     title: 'Body Temperature Deviation',
@@ -77,6 +95,33 @@ export const READINESS_DRILLDOWN_METRICS = Object.freeze({
     source: 'sleepmodel',
     value: record => record?.efficiency,
   }),
+  readinessHrvBalanceContributor: Object.freeze({
+    key: 'readinessHrvBalanceContributor', title: 'HRV Balance Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.hrv_balance,
+  }),
+  readinessRestingHeartRateContributor: Object.freeze({
+    key: 'readinessRestingHeartRateContributor', title: 'Resting Heart Rate Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.resting_heart_rate,
+  }),
+  readinessRecoveryIndexContributor: Object.freeze({
+    key: 'readinessRecoveryIndexContributor', title: 'Recovery Index Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.recovery_index,
+  }),
+  readinessBodyTemperatureContributor: Object.freeze({
+    key: 'readinessBodyTemperatureContributor', title: 'Body Temperature Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.body_temperature,
+  }),
+  readinessPreviousNightContributor: Object.freeze({
+    key: 'readinessPreviousNightContributor', title: 'Previous Night Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.previous_night,
+  }),
+  readinessPreviousDayActivityContributor: Object.freeze({
+    key: 'readinessPreviousDayActivityContributor', title: 'Previous Day Activity Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.previous_day_activity,
+  }),
+  readinessSleepBalanceContributor: Object.freeze({
+    key: 'readinessSleepBalanceContributor', title: 'Sleep Balance Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.sleep_balance,
+  }),
+  readinessActivityBalanceContributor: Object.freeze({
+    key: 'readinessActivityBalanceContributor', title: 'Activity Balance Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.activity_balance,
+  }),
+  readinessSleepRegularityContributor: Object.freeze({
+    key: 'readinessSleepRegularityContributor', title: 'Sleep Regularity Contributor', unit: '', precision: 0, axisStep: 10, source: 'readiness', value: record => record?.contributors?.sleep_regularity,
+  }),
   deepSleepContributor: Object.freeze({
     key: 'deepSleepContributor', title: 'Deep Sleep Contributor', unit: '', precision: 0, axisStep: 10, source: 'sleep', value: record => record?.contributors?.deep_sleep,
   }),
@@ -131,6 +176,35 @@ export const READINESS_DRILLDOWN_METRICS = Object.freeze({
   activitySteps: Object.freeze({
     key: 'activitySteps', title: 'Steps', unit: '', precision: 0, axisStep: 2000, source: 'activity', value: record => record?.steps,
   }),
+  activityInactivityAlerts: Object.freeze({
+    key: 'activityInactivityAlerts', title: 'Inactivity Alerts', unit: 'alerts', precision: 0, axisStep: 1, source: 'activity', value: record => record?.inactivity_alerts,
+  }),
+  biometricsHeartRate: Object.freeze({
+    key: 'biometricsHeartRate',
+    title: 'Heart Rate',
+    unit: 'bpm',
+    precision: 0,
+    axisStep: 5,
+    source: 'heartrate',
+    records: true,
+    value: records => {
+      const values = (records || []).map(record => Number(record?.bpm)).filter(value => value > 0 && value < 250);
+      return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+    },
+  }),
+  biometricsSkinTemperature: Object.freeze({
+    key: 'biometricsSkinTemperature',
+    title: 'Skin Temperature',
+    unit: '°C',
+    precision: 1,
+    axisStep: 0.5,
+    source: 'temperature',
+    records: true,
+    value: records => {
+      const values = (records || []).map(record => Number(record?.skin_temp)).filter(value => value > 0);
+      return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+    },
+  }),
 });
 
 export const METRIC_DRILLDOWN_RANGES = TREND_RANGE_CONFIG;
@@ -142,6 +216,9 @@ const finiteNumber = value => {
 };
 
 const dailyMetricValue = (appData, metric, date) => {
+  if (metric.records) {
+    return finiteNumber(metric.value(appData[metric.source]?.[date] || []));
+  }
   const record = metric.source === 'sleepmodel'
     ? getLongSleepRecord(appData.sleepmodel?.[date])
     : appData[metric.source]?.[date]?.[0] || null;
@@ -162,12 +239,12 @@ const valuesBetween = (appData, metric, startDate, endDate) => {
 
 const dayLabel = date => {
   const presentation = calendarDates.getDatePresentation(date);
-  return `${presentation.month}/${presentation.dayOfMonth}`;
+  return `${presentation.weekdayShort} ${presentation.month}/${presentation.dayOfMonth}`;
 };
 
 const weekLabel = date => {
   const presentation = calendarDates.getDatePresentation(date);
-  return `${presentation.monthShort} ${presentation.dayOfMonth}`;
+  return `${presentation.weekdayShort} ${presentation.month}/${presentation.dayOfMonth}`;
 };
 
 const monthLabel = monthKey => {

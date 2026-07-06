@@ -18,6 +18,19 @@ export const formatChartPointLabel = (key, fallback = '') => {
   return fallback || value;
 };
 
+export const formatChartAxisLabel = (key, fallback = '') => {
+  const value = String(key || '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = calendarDates.getDatePresentation(value);
+    return Object.freeze([date.weekdayShort, `${date.month}/${date.dayOfMonth}`]);
+  }
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    const month = calendarDates.getYearMonthPresentation(value);
+    return Object.freeze([month.monthName.slice(0, 3), `'${String(month.year).slice(-2)}`]);
+  }
+  return Object.freeze([fallback || value]);
+};
+
 export function useChartPointLabel() {
   const [hoveredKey, setHoveredKey] = useState(null);
   const [clicked, setClicked] = useState(null);
@@ -81,6 +94,24 @@ export function SvgChartPointLabel({ x, y, label, chartWidth, chartHeight, fadin
         {label}
       </text>
     </g>
+  );
+}
+
+export function SvgChartAxisLabel({ x, y, chartKey, fallback, active = false, fontSize = 15 }) {
+  const lines = formatChartAxisLabel(chartKey, fallback);
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor="middle"
+      fill={active ? '#67e8f9' : 'rgba(148,163,184,0.78)'}
+      fontSize={fontSize}
+      fontWeight={active ? '800' : '600'}
+    >
+      {lines.map((line, index) => (
+        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : fontSize + 3}>{line}</tspan>
+      ))}
+    </text>
   );
 }
 

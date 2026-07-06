@@ -1,3 +1,5 @@
+import { calendarDates } from './dateService.js';
+
 const DAY_SECONDS = 24 * 60 * 60;
 const FIVE_MINUTE_SECONDS = 5 * 60;
 const COMPLETE_DAY_INTERVALS = 288;
@@ -42,6 +44,8 @@ export const formatWearDuration = seconds => {
   return `${minutes}m`;
 };
 
+export const getWearCoverageBand = value => WEAR_COVERAGE_BANDS.find(({ minimum }) => value >= minimum) || WEAR_COVERAGE_BANDS.at(-1);
+
 export function getWearCoverage(activityData) {
   const rawNonWear = activityData?.non_wear_time;
   const nonWearSeconds = Number(rawNonWear);
@@ -58,13 +62,16 @@ export function getWearCoverage(activityData) {
   const coverage = isPartial
     ? null
     : Math.max(0, Math.min(100, ((DAY_SECONDS - boundedNonWear) / DAY_SECONDS) * 100));
-  const band = isPartial
-    ? null
-    : WEAR_COVERAGE_BANDS.find(({ minimum }) => coverage >= minimum) || WEAR_COVERAGE_BANDS.at(-1);
+  const completenessPercentage = isPartial ? recordedPercentage : coverage;
+  const band = isPartial ? null : getWearCoverageBand(coverage);
+  const completenessBand = getWearCoverageBand(completenessPercentage);
 
   return {
     available: true,
     band,
+    completenessBand,
+    completenessLabel: isPartial ? 'activity record available' : 'wear coverage',
+    completenessPercentage,
     coverage,
     isPartial,
     nonWearSeconds,
@@ -72,4 +79,20 @@ export function getWearCoverage(activityData) {
     recordedSeconds,
     unclassifiedSeconds,
   };
+}
+
+export function getWearCoverageHistory(groupedActivity, anchorDate, length = 14) {
+  const startDate = calendarDates.addDays(anchorDate, -(length - 1));
+  return Object.freeze(Array.from({ length }, (_, index) => {
+    const date = calendarDates.addDays(startDate, index);
+    const result = getWearCoverage(groupedActivity?.[date]?.[0]);
+    return Object.freeze({
+      date,
+      result,
+      completeness: result.available ? result.completenessPercentage : null,
+      coverage: result.available && !result.isPartial ? result.coverage : null,
+      isPartial: result.available ? result.isPartial : false,
+      label: result.available ? result.completenessLabel : 'unavailable',
+    });
+  }));
 }

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import CalendarPicker from './CalendarPicker';
-import { formatChartPointLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
+import { formatChartPointLabel, SvgChartAxisLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
 import TrendPeriodFooter from './TrendPeriodFooter';
 import UnavailableState from './UnavailableState';
 import { useToast } from '../context/toast';
@@ -11,6 +11,7 @@ import { calendarDates } from '../utils/dateService';
 import { getAvailableRecordDates } from '../utils/dataAvailability';
 import { formatActivityDuration, getActivityTimeSeconds, getDailyMovementBuckets } from '../utils/activityDetails';
 import { getTrendPeriods, recordsInPeriod, TREND_DEFAULT_RANGES, TREND_RANGE_CONFIG } from '../utils/trendRanges';
+import useSwipePaging from '../hooks/useSwipePaging';
 
 const MODES = Object.freeze([
   ['day', 'Day'],
@@ -150,7 +151,7 @@ function PeriodMovementChart({ points, selectedKey, onSelect }) {
             <g key={point.key} role="button" tabIndex="0" aria-label={`Select ${point.label}, ${point.value} movement minutes`} onClick={() => { onSelect(point.key); labelState.showClicked(point.key); }} onMouseEnter={() => labelState.showHovered(point.key)} onMouseLeave={() => labelState.hideHovered(point.key)} onFocus={() => labelState.showHovered(point.key)} onBlur={() => labelState.hideHovered(point.key)} onKeyDown={event => activateWithKeyboard(event, () => { onSelect(point.key); labelState.showClicked(point.key); })} className="cursor-pointer outline-none">
               <rect x={x - 5} y={padding.top} width={barWidth + 10} height={plotHeight} fill="transparent" />
               <rect x={x} y={y} width={barWidth} height={padding.top + plotHeight - y} rx="7" fill={isSelected ? '#67e8f9' : '#e2e8f0'} opacity={isSelected ? '1' : '0.62'} />
-              {(index % labelEvery === 0 || index === points.length - 1) && <text x={x + barWidth / 2} y={height - 27} textAnchor="middle" fill={isSelected ? '#f8fafc' : 'rgba(148,163,184,0.78)'} fontSize="16" fontWeight={isSelected ? '800' : '600'}>{point.label}</text>}
+              {(index % labelEvery === 0 || index === points.length - 1) && <SvgChartAxisLabel x={x + barWidth / 2} y={height - 45} chartKey={point.key} fallback={point.label} active={isSelected} />}
             </g>
           );
         })}
@@ -213,6 +214,7 @@ function ActivityMovementContent({ appData, initialDate, initialMode = 'day', on
       setSelectedKey(mode === 'day' ? '0' : nextDate);
     }
   };
+  const swipePaging = useSwipePaging({ canPrevious, canNext, onPrevious: () => shift(-1), onNext: () => shift(1) });
 
   const commitRange = () => {
     const config = mode === 'day' ? { minimum: 3, maximum: 24, unit: 'hours' } : TREND_RANGE_CONFIG[mode];
@@ -239,7 +241,7 @@ function ActivityMovementContent({ appData, initialDate, initialMode = 'day', on
       : null;
 
   return (
-    <motion.div className="fixed inset-0 z-[180] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} data-activity-movement-dialog="true">
+    <motion.div className="fixed inset-0 z-[180] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose} data-activity-movement-dialog="true">
       <motion.div role="dialog" aria-modal="true" aria-label="Movement totals" className="max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950 shadow-2xl" initial={{ opacity: 0, scale: 0.98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98, y: 12 }} onMouseDown={event => event.stopPropagation()}>
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 py-4 backdrop-blur-xl sm:px-6">
           <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Activity details"><ChevronLeft className="h-6 w-6" /></button>
@@ -267,7 +269,7 @@ function ActivityMovementContent({ appData, initialDate, initialMode = 'day', on
             <p className="mt-2 text-sm text-slate-400">{mode === 'day' ? `${selectedBucket?.label || ''} · active movement` : 'Activity time'}</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex touch-pan-y items-center gap-2" {...swipePaging}>
             <button type="button" disabled={!canPrevious} onClick={() => shift(-1)} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Previous ${mode} movement period`}><ChevronLeft className="mx-auto h-5 w-5" /></button>
             <div className="min-w-0 flex-1">
               {mode === 'day'

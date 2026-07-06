@@ -1,0 +1,5 @@
+id;day;optimal_bedtime;recommendation;status
+fd32be91-a5d7-47d3-bdd3-5f216c19731f;2026-06-27;;;not_enough_nights
+9e2bf7fd-79c7-45a8-9d85-04812f85b45d;2026-06-28;;;not_enough_nights
+c4047264-df6a-464d-99fd-2fff46355392;2026-06-29;;;not_enough_nights
+c1331748-a228-4502-9a2a-ff257c188410;2026-06-30;;;not_enough_nights

@@ -34,6 +34,20 @@ export const getActivityTimeSeconds = record => (
     .reduce((total, key) => total + Math.max(0, finiteNumber(record?.[key]) || 0), 0)
 );
 
+export const ACTIVITY_INTENSITY_LEVELS = Object.freeze([
+  Object.freeze({ key: 'vigorous', label: 'Vigorous', source: 'high_activity_time', color: '#f43f5e' }),
+  Object.freeze({ key: 'moderate', label: 'Moderate', source: 'medium_activity_time', color: '#f59e0b' }),
+  Object.freeze({ key: 'light', label: 'Light', source: 'low_activity_time', color: '#06b6d4' }),
+  Object.freeze({ key: 'sedentary', label: 'Sedentary', source: 'sedentary_time', color: '#64748b' }),
+]);
+
+export const getActivityIntensityDurations = record => Object.freeze(
+  ACTIVITY_INTENSITY_LEVELS.map(level => Object.freeze({
+    ...level,
+    seconds: Math.max(0, finiteNumber(record?.[level.source]) || 0),
+  })),
+);
+
 export const getGoalProgress = record => {
   const activeCalories = finiteNumber(record?.active_calories);
   const targetCalories = finiteNumber(record?.target_calories);

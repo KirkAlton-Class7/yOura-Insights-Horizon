@@ -5,8 +5,9 @@ import ActivityInfoModal from './ActivityInfoModal';
 import ActivityBenefitsDrilldownModal from './ActivityBenefitsDrilldownModal';
 import ActivityMovementDrilldownModal from './ActivityMovementDrilldownModal';
 import ActivityZoneDrilldownModal from './ActivityZoneDrilldownModal';
+import ActivityIntensityDrilldownModal from './ActivityIntensityDrilldownModal';
 import CalendarPicker from './CalendarPicker';
-import { formatChartPointLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
+import { formatChartPointLabel, SvgChartAxisLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
 import MetricDrilldownModal from './MetricDrilldownModal';
 import SubScoreBar from './SubScoreBar';
 import UnavailableState from './UnavailableState';
@@ -15,6 +16,7 @@ import { getAvailableRecordDates } from '../utils/dataAvailability';
 import { calendarDates } from '../utils/dateService';
 import {
   formatActivityDuration,
+  getActivityIntensityDurations,
   getActivityTimeSeconds,
   getDailyMovementBuckets,
   getGoalProgress,
@@ -47,6 +49,19 @@ function MetricCard({ label, value, unit, onOpen }) {
           <p className="mt-3 font-outfit text-2xl font-medium tabular-nums text-slate-100">{value}{value !== '--' && unit ? <span className="ml-1 text-base text-slate-400">{unit}</span> : null}</p>
         </div>
         <ChevronRight className="h-5 w-5 text-slate-500" />
+      </div>
+    </button>
+  );
+}
+
+function ActivityIntensityBreakdownCard({ activity, onOpen }) {
+  const durations = getActivityIntensityDurations(activity);
+  const maximum = Math.max(...durations.map(item => item.seconds), 1);
+  return (
+    <button type="button" onClick={onOpen} className="w-full rounded-2xl border border-white/10 bg-slate-900/55 p-5 text-left transition-colors hover:border-cyan-300/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:p-6" aria-label="Open Activity Intensity Breakdown">
+      <div className="flex items-start justify-between gap-3"><div><h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Activity Intensity Breakdown</h2><p className="mt-1 text-sm text-slate-400">Daily duration by movement intensity</p></div><ChevronRight className="h-5 w-5 text-slate-500" /></div>
+      <div className="mt-5 space-y-3">
+        {durations.map(item => <div key={item.key} className="grid grid-cols-[5.5rem_1fr_auto] items-center gap-3"><span className="text-sm text-slate-300">{item.label}</span><span className="h-2 overflow-hidden rounded-full bg-slate-800"><span className="block h-full rounded-full" style={{ width: `${Math.max(item.seconds > 0 ? 4 : 0, (item.seconds / maximum) * 100)}%`, backgroundColor: item.color }} /></span><span className="min-w-[4rem] text-right font-outfit text-sm tabular-nums text-slate-200">{formatActivityDuration(item.seconds)}</span></div>)}
       </div>
     </button>
   );
@@ -176,7 +191,7 @@ function WeeklyBenefitsChart({ weekly, selectedDate, onSelectDate }) {
                 {metabolic > 0 && cardiovascular > 0 && <line x1={x} x2={x + barWidth} y1={metabolicTop} y2={metabolicTop} stroke="#020617" strokeOpacity="0.45" strokeWidth="1.5" />}
               </g>
               {isSelected && total > 0 && <rect x={x - 3} y={barTop - 3} width={barWidth + 6} height={barHeight + 6} rx="11" fill="none" stroke="#67e8f9" strokeWidth="4" />}
-              <text x={x + barWidth / 2} y={height - 28} textAnchor="middle" fill={isSelected ? '#f8fafc' : 'rgba(148,163,184,0.8)'} fontSize="17" fontWeight={isSelected ? '800' : '600'}>{day.label}</text>
+              <SvgChartAxisLabel x={x + barWidth / 2} y={height - 46} chartKey={day.date} fallback={day.label} active={isSelected} />
             </g>
           );
         })}
@@ -204,7 +219,7 @@ function WeeklyBenefitsCard({ weekly, selectedDate, onOpenDetails, onOpenInfo })
           <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Benefits This Week</h2>
           <p className="mt-1 text-sm text-slate-400">{weekly.hasHeartRateData ? 'Estimated benefit time from observed heart-rate samples' : 'Daily activity totals · heart-rate benefit detail unavailable'}</p>
         </div>
-        <button type="button" onClick={event => { event.stopPropagation(); onOpenInfo(); }} className="rounded-lg border border-white/10 bg-slate-950/45 p-2 text-slate-400 hover:text-white" aria-label="Learn about long-term activity benefits"><Info className="h-5 w-5" /></button>
+        <button type="button" onClick={event => { event.stopPropagation(); onOpenInfo(); }} className="p-2 text-slate-400 transition-colors hover:text-white" aria-label="Learn about long-term activity benefits"><Info className="h-5 w-5" /></button>
       </div>
       <div className="border-t border-white/10 p-3 sm:p-5">
         <WeeklyBenefitsChart weekly={weekly} selectedDate={selectedDate} />
@@ -234,7 +249,7 @@ function WeeklyZoneMinutes({ weekly, onOpenDetails, onOpenInfo }) {
           <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Weekly Zone Minutes</h2>
           <p className="mt-2 text-sm text-slate-500">Estimated from observed heart-rate samples</p>
         </div>
-        <button type="button" onClick={event => { event.stopPropagation(); onOpenInfo(); }} className="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Learn about weekly heart-rate zones"><Info className="h-5 w-5" /></button>
+        <button type="button" onClick={event => { event.stopPropagation(); onOpenInfo(); }} className="p-2 text-slate-400 transition-colors hover:text-white" aria-label="Learn about weekly heart-rate zones"><Info className="h-5 w-5" /></button>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {HEART_RATE_ZONES.map((zone, index) => (
@@ -259,6 +274,7 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
   const [movementDrilldownMode, setMovementDrilldownMode] = useState(initialTarget === 'movement' ? 'day' : null);
   const [isBenefitsDrilldownOpen, setIsBenefitsDrilldownOpen] = useState(initialTarget === 'benefits');
   const [isZoneDrilldownOpen, setIsZoneDrilldownOpen] = useState(initialTarget === 'zones');
+  const [isIntensityDrilldownOpen, setIsIntensityDrilldownOpen] = useState(initialTarget === 'intensity');
   const [selectedMovementHour, setSelectedMovementHour] = useState(0);
   const availableDates = useMemo(() => getAvailableRecordDates(appData.activity), [appData.activity]);
   const activity = appData.activity?.[detailDate]?.[0] || null;
@@ -279,6 +295,7 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
         && !document.querySelector('[data-activity-benefits-dialog="true"]')
         && !document.querySelector('[data-activity-movement-dialog="true"]')
         && !document.querySelector('[data-activity-zone-dialog="true"]')
+        && !document.querySelector('[data-activity-intensity-dialog="true"]')
         && !document.querySelector('[data-metric-drilldown="true"]')
       ) onClose();
     };
@@ -291,7 +308,7 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
 
   return (
     <>
-      <motion.div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/85 p-3 backdrop-blur-md sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} data-activity-detail-dialog="true">
+      <motion.div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/85 p-3 backdrop-blur-md sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose} data-activity-detail-dialog="true">
         <motion.div role="dialog" aria-modal="true" aria-label="Activity details" className="max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950/95 shadow-2xl shadow-black/60" initial={{ opacity: 0, scale: 0.98, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98, y: 14 }} transition={{ duration: 0.18 }} onMouseDown={event => event.stopPropagation()}>
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-5 py-4 backdrop-blur-xl sm:px-7">
             <div>
@@ -341,6 +358,9 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
                   onOpenInfo={() => setInfoTopic('movement')}
                 />
               </div>
+              <div className="mt-4">
+                <MetricCard label="Inactivity Alerts" value={displayNumber(activity?.inactivity_alerts)} onOpen={() => setDrillMetric('activityInactivityAlerts')} />
+              </div>
             </section>
 
             <section>
@@ -352,6 +372,10 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
               />
             </section>
 
+            <section>
+              <ActivityIntensityBreakdownCard activity={activity} onOpen={() => setIsIntensityDrilldownOpen(true)} />
+            </section>
+
             <WeeklyZoneMinutes weekly={weekly} onOpenDetails={() => setIsZoneDrilldownOpen(true)} onOpenInfo={() => setInfoTopic('zones')} />
           </div>
         </motion.div>
@@ -361,6 +385,7 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
       <AnimatePresence>{movementDrilldownMode && <ActivityMovementDrilldownModal appData={appData} initialDate={detailDate} initialMode={movementDrilldownMode} onClose={() => setMovementDrilldownMode(null)} />}</AnimatePresence>
       <AnimatePresence>{isBenefitsDrilldownOpen && <ActivityBenefitsDrilldownModal appData={appData} initialDate={detailDate} onClose={() => setIsBenefitsDrilldownOpen(false)} />}</AnimatePresence>
       <AnimatePresence>{isZoneDrilldownOpen && <ActivityZoneDrilldownModal appData={appData} initialDate={detailDate} onClose={() => setIsZoneDrilldownOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{isIntensityDrilldownOpen && <ActivityIntensityDrilldownModal appData={appData} initialDate={detailDate} onClose={() => setIsIntensityDrilldownOpen(false)} />}</AnimatePresence>
     </>
   );
 }

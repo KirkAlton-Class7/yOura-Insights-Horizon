@@ -138,6 +138,7 @@ export default function CalendarPicker({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              onMouseDown={() => setIsCalendarOpen(false)}
               data-calendar-dialog="true"
             >
               <motion.div

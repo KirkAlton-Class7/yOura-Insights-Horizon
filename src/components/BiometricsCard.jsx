@@ -4,7 +4,7 @@ import { getBloodOxygenColor, METRIC_COLORS } from '../utils/colors';
 import { buildBiometricsCardSnapshot } from '../utils/cardSnapshots';
 import UnavailableState from './UnavailableState';
 
-export default function BiometricsCard({ spo2Data, heartrateData, temperatureData }) {
+export default function BiometricsCard({ spo2Data, heartrateData, temperatureData, onOpenDetails }) {
   const { showToast } = useToast();
 
   const spo2Val = spo2Data?.spo2_percentage?.average ? Number(spo2Data.spo2_percentage.average).toFixed(1) : null;
@@ -36,6 +36,8 @@ export default function BiometricsCard({ spo2Data, heartrateData, temperatureDat
       snapshotLabel="Biometrics snapshot"
       onCopyFailure={() => showToast('Failed to copy Biometrics snapshot.')}
       onCopySuccess={() => showToast('Biometrics snapshot copied to clipboard.')}
+      onOpen={onOpenDetails}
+      openLabel="Open Biometrics details"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {spo2Val && (

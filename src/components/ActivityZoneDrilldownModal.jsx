@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import CalendarPicker from './CalendarPicker';
-import { formatChartPointLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
+import { formatChartPointLabel, SvgChartAxisLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
 import TrendPeriodFooter from './TrendPeriodFooter';
 import UnavailableState from './UnavailableState';
 import { calendarDates } from '../utils/dateService';
@@ -11,6 +11,7 @@ import { getAvailableRecordDates } from '../utils/dataAvailability';
 import { formatActivityDuration, getDailyHeartRateZoneMinutes, HEART_RATE_ZONES } from '../utils/activityDetails';
 import { getTrendPeriods, recordsInPeriod, TREND_DEFAULT_RANGES, TREND_RANGE_CONFIG } from '../utils/trendRanges';
 import { useToast } from '../context/toast';
+import useSwipePaging from '../hooks/useSwipePaging';
 
 const ZONE_COLORS = Object.freeze(['#94a3b8', '#7dd3fc', '#38bdf8', '#34d399', '#f59e0b', '#f43f5e']);
 
@@ -122,7 +123,7 @@ function ZoneChart({ points, selectedKey, onSelect }) {
                 ) : null)}
               </g>
               {isSelected && point.total > 0 && <rect x={x - 3} y={barTop - 3} width={barWidth + 6} height={barHeight + 6} rx="10" fill="none" stroke="#67e8f9" strokeWidth="4" />}
-              {(index % labelEvery === 0 || index === points.length - 1) && <text x={x + barWidth / 2} y={height - 28} textAnchor="middle" fill={isSelected ? '#f8fafc' : 'rgba(148,163,184,0.78)'} fontSize="16" fontWeight={isSelected ? '800' : '600'}>{point.label}</text>}
+              {(index % labelEvery === 0 || index === points.length - 1) && <SvgChartAxisLabel x={x + barWidth / 2} y={height - 46} chartKey={point.key} fallback={point.label} active={isSelected} />}
             </g>
           );
         })}
@@ -139,9 +140,9 @@ function ActivityZoneContent({ appData, initialDate, onClose }) {
   const [mode, setMode] = useState('week');
   const [anchorDate, setAnchorDate] = useState(initialDate);
   const [selectedKey, setSelectedKey] = useState(initialDate);
-  const [ranges, setRanges] = useState(() => ({ ...TREND_DEFAULT_RANGES }));
+  const [ranges, setRanges] = useState(() => ({ ...TREND_DEFAULT_RANGES, day: 3 }));
   const [rangeDrafts, setRangeDrafts] = useState(() => Object.fromEntries(
-    Object.entries(TREND_DEFAULT_RANGES).map(([key, value]) => [key, String(value)]),
+    Object.entries({ ...TREND_DEFAULT_RANGES, day: 3 }).map(([key, value]) => [key, String(value)]),
   ));
   const availableDates = useMemo(() => getAvailableRecordDates(
     appData.heartrate,
@@ -185,6 +186,7 @@ function ActivityZoneContent({ appData, initialDate, onClose }) {
       setSelectedKey(mode === 'day' ? getLatestObservedHourKey(appData, nextDate, ranges.day) : nextDate);
     }
   };
+  const swipePaging = useSwipePaging({ canPrevious, canNext, onPrevious: () => shift(-1), onNext: () => shift(1) });
 
   const commitRange = () => {
     const config = mode === 'day' ? { minimum: 3, maximum: 24, unit: 'hours' } : TREND_RANGE_CONFIG[mode];
@@ -199,7 +201,7 @@ function ActivityZoneContent({ appData, initialDate, onClose }) {
   };
 
   return (
-    <motion.div className="fixed inset-0 z-[180] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} data-activity-zone-dialog="true">
+    <motion.div className="fixed inset-0 z-[180] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose} data-activity-zone-dialog="true">
       <motion.div role="dialog" aria-modal="true" aria-label="Weekly zone minutes" className="max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950 shadow-2xl" initial={{ opacity: 0, scale: 0.98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98, y: 12 }} onMouseDown={event => event.stopPropagation()}>
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 py-4 backdrop-blur-xl sm:px-6">
           <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Activity details"><ChevronLeft className="h-6 w-6" /></button>
@@ -225,7 +227,7 @@ function ActivityZoneContent({ appData, initialDate, onClose }) {
             <p className="font-outfit text-5xl font-light tabular-nums text-slate-100">{formatActivityDuration((selected?.total || 0) * 60)}</p>
             <p className="mt-2 text-sm text-slate-400">Total observed zone time</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex touch-pan-y items-center gap-2" {...swipePaging}>
             <button type="button" disabled={!canPrevious} onClick={() => shift(-1)} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Previous ${mode} zone period`}><ChevronLeft className="mx-auto h-5 w-5" /></button>
             <div className="min-w-0 flex-1"><ZoneChart points={points} selectedKey={selected?.key} onSelect={setSelectedKey} /></div>
             <button type="button" disabled={!canNext} onClick={() => shift(1)} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Next ${mode} zone period`}><ChevronRight className="mx-auto h-5 w-5" /></button>

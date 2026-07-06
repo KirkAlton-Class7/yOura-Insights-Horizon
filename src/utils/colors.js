@@ -58,7 +58,8 @@ export const getScoreColor = (value) => {
 
 export const getScoreStatus = (value) => {
   const level = getScoreLevel(value);
-  return level ? level.charAt(0).toUpperCase() + level.slice(1) : 'No Data';
+  if (!level) return 'No Data';
+  return level === 'bad' ? 'Poor' : level.charAt(0).toUpperCase() + level.slice(1);
 };
 
 export const getStatusLevel = (status) => {

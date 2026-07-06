@@ -6,6 +6,8 @@ import { formatChartPointLabel, SvgChartPointLabel, useChartPointLabel } from '.
 import MetricDrilldownModal from './MetricDrilldownModal';
 import SubScoreBar from './SubScoreBar';
 import UnavailableState from './UnavailableState';
+import useSwipePaging from '../hooks/useSwipePaging';
+import { avoidCircleLabelCollision } from '../utils/chartGeometry';
 import { getScoreColor } from '../utils/colors';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableRecordDates } from '../utils/dataAvailability';
@@ -17,15 +19,15 @@ import {
 } from '../utils/readinessDetails';
 
 const CONTRIBUTOR_DEFINITIONS = Object.freeze([
-  ['hrv_balance', 'HRV Balance'],
-  ['resting_heart_rate', 'Resting Heart Rate'],
-  ['recovery_index', 'Recovery Index'],
-  ['body_temperature', 'Body Temperature'],
-  ['previous_night', 'Previous Night'],
-  ['previous_day_activity', 'Previous Day Activity'],
-  ['sleep_balance', 'Sleep Balance'],
-  ['activity_balance', 'Activity Balance'],
-  ['sleep_regularity', 'Sleep Regularity'],
+  ['hrv_balance', 'HRV Balance', 'readinessHrvBalanceContributor'],
+  ['resting_heart_rate', 'Resting Heart Rate', 'readinessRestingHeartRateContributor'],
+  ['recovery_index', 'Recovery Index', 'readinessRecoveryIndexContributor'],
+  ['body_temperature', 'Body Temperature', 'readinessBodyTemperatureContributor'],
+  ['previous_night', 'Previous Night', 'readinessPreviousNightContributor'],
+  ['previous_day_activity', 'Previous Day Activity', 'readinessPreviousDayActivityContributor'],
+  ['sleep_balance', 'Sleep Balance', 'readinessSleepBalanceContributor'],
+  ['activity_balance', 'Activity Balance', 'readinessActivityBalanceContributor'],
+  ['sleep_regularity', 'Sleep Regularity', 'readinessSleepRegularityContributor'],
 ]);
 
 const displayNumber = (value, decimals = 0) => {
@@ -43,6 +45,12 @@ function ReadinessHistory({
   canNextPeriod,
 }) {
   const labelState = useChartPointLabel();
+  const swipePaging = useSwipePaging({
+    canPrevious: canPreviousPeriod,
+    canNext: canNextPeriod,
+    onPrevious: onPreviousPeriod,
+    onNext: onNextPeriod,
+  });
   const scrollContainerRef = useRef(null);
   const restingValues = history
     .map(day => day.restingHeartRate)
@@ -81,12 +89,12 @@ function ReadinessHistory({
   return (
     <section className="rounded-2xl border border-white/10 bg-slate-950/35 p-4 sm:p-6">
       <div className="text-center">
-        <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Selected day</p>
+        <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Overview</p>
         <h3 className="mt-1 font-outfit text-2xl font-semibold text-slate-100">
           {selected.weekdayShort}, {selected.monthShort} {selected.dayOfMonth}
         </h3>
       </div>
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex touch-pan-y items-center gap-2" {...swipePaging}>
         <motion.button
           type="button"
           onClick={onPreviousPeriod}
@@ -110,6 +118,14 @@ function ReadinessHistory({
             const x = slotWidth * index + slotWidth * 0.16;
             const barWidth = slotWidth * 0.68;
             const barHeight = score === null ? 5 : Math.max(12, (score / 100) * barMaximumHeight);
+            const circleY = day.restingHeartRate === null
+              ? null
+              : 185 - ((day.restingHeartRate - restingMinimum) / restingRange) * 85;
+            const scoreLabelY = avoidCircleLabelCollision(
+              baseline - barHeight - 10,
+              circleY,
+              { minimum: 20, maximum: baseline - 12 },
+            );
             const presentation = calendarDates.getDatePresentation(day.date);
             const isAvailable = day.readinessScore !== null;
             return (
@@ -153,7 +169,7 @@ function ReadinessHistory({
                 {score !== null && (
                   <text
                     x={slotWidth * index + slotWidth / 2}
-                    y={baseline - barHeight - 10}
+                    y={scoreLabelY}
                     textAnchor="middle"
                     fill="rgba(226,232,240,0.85)"
                     fontSize="19"
@@ -463,6 +479,7 @@ export default function ReadinessDetailModal({ appData, selectedDate, initialTar
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onMouseDown={onClose}
     >
       <motion.div
         role="dialog"
@@ -514,8 +531,8 @@ export default function ReadinessDetailModal({ appData, selectedDate, initialTar
           <section>
             <h2 className="font-outfit text-xl font-semibold text-slate-100">Contributors</h2>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {CONTRIBUTOR_DEFINITIONS.map(([key, label]) => (
-                <SubScoreBar key={key} label={label} value={contributors[key]} />
+              {CONTRIBUTOR_DEFINITIONS.map(([key, label, metricKey]) => (
+                <SubScoreBar key={key} label={label} value={contributors[key]} onOpen={() => setDrillMetric(metricKey)} />
               ))}
             </div>
           </section>

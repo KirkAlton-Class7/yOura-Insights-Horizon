@@ -6,9 +6,12 @@ import {
 } from '../src/utils/metricDrilldown.js';
 import { calendarDates } from '../src/utils/dateService.js';
 
-const appData = { readiness: {}, sleep: {}, sleepmodel: {} };
+const appData = { readiness: {}, sleep: {}, sleepmodel: {}, activity: {} };
 Array.from({ length: 220 }, (_, index) => calendarDates.addDays('2026-01-01', index)).forEach((date, index) => {
-  appData.readiness[date] = [{ temperature_deviation: (index % 5) / 10 }];
+  appData.readiness[date] = [{
+    temperature_deviation: (index % 5) / 10,
+    contributors: { hrv_balance: 70 + (index % 20), recovery_index: 65 + (index % 25) },
+  }];
   appData.sleepmodel[date] = [{
     type: 'long_sleep',
     deep_sleep_duration: 4200,
@@ -17,10 +20,12 @@ Array.from({ length: 220 }, (_, index) => calendarDates.addDays('2026-01-01', in
     time_in_bed: 19800,
     efficiency: 94,
     lowest_heart_rate: 50 + (index % 10),
+    average_heart_rate: 60 + (index % 10),
     average_hrv: 40 + (index % 20),
     average_breath: 13 + (index % 4) / 10,
   }];
   appData.sleep[date] = [{ contributors: { deep_sleep: 70 + (index % 20) } }];
+  appData.activity[date] = [{ inactivity_alerts: index % 4 }];
 });
 
 test('day mode defaults to 14 chronological daily points and accepts 3–30', () => {
@@ -70,4 +75,25 @@ test('sleep duration and contributor metrics reuse the shared trend series', () 
   const contributor = getMetricDrilldownSeries(appData, 'deepSleepContributor', 'week', '2026-07-03');
   assert.ok(duration.points.every(point => point.value > 0));
   assert.ok(contributor.points.some(point => point.value !== null));
+});
+
+test('overnight breathing, heart-rate, and HRV metrics share day, week, and month drilldowns', () => {
+  const breathing = getMetricDrilldownSeries(appData, 'respiratoryRate', 'day', '2026-07-03');
+  const averageHeartRate = getMetricDrilldownSeries(appData, 'averageHeartRate', 'week', '2026-07-03');
+  const lowestHeartRate = getMetricDrilldownSeries(appData, 'lowestHeartRate', 'month', '2026-07-03');
+  const averageHrv = getMetricDrilldownSeries(appData, 'averageHrv', 'day', '2026-07-03');
+  assert.ok([breathing, averageHeartRate, lowestHeartRate, averageHrv].every(series => series.points.some(point => point.value !== null)));
+});
+
+test('readiness contributors reuse the shared day, week, and month drilldown series', () => {
+  const day = getMetricDrilldownSeries(appData, 'readinessHrvBalanceContributor', 'day', '2026-07-03');
+  const week = getMetricDrilldownSeries(appData, 'readinessRecoveryIndexContributor', 'week', '2026-07-03');
+  assert.ok(day.points.every(point => point.value !== null));
+  assert.ok(week.points.every(point => point.value !== null));
+});
+
+test('inactivity alerts reuse the shared trend series', () => {
+  const series = getMetricDrilldownSeries(appData, 'activityInactivityAlerts', 'day', '2026-07-03');
+  assert.equal(series.points.length, 14);
+  assert.ok(series.points.every(point => point.value !== null));
 });

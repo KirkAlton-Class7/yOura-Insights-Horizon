@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronRight, Info, X } from 'lucide-react';
 import CalendarPicker from './CalendarPicker';
 import MetricDrilldownModal from './MetricDrilldownModal';
-import { MetricTrendChart } from './ReadinessDetailModal';
 import SleepDebtDetailModal from './SleepDebtDetailModal';
 import SleepInfoModal from './SleepInfoModal';
 import SleepRegularityDetailModal from './SleepRegularityDetailModal';
@@ -15,7 +14,7 @@ import { getScoreColor, SEMANTIC_COLORS } from '../utils/colors';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableDatesAcrossDatasets } from '../utils/dataAvailability';
 import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
-import { getLongSleepRecord, parseMetricSeries } from '../utils/readinessDetails';
+import { getLongSleepRecord } from '../utils/readinessDetails';
 import {
   SLEEP_DEBT_CATEGORIES,
   calculateSleepDebt,
@@ -42,6 +41,7 @@ const CONTRIBUTOR_DEFINITIONS = Object.freeze([
 ]);
 
 const displayNumber = (value, decimals = 0) => {
+  if (value === '' || value === null || value === undefined) return '--';
   const number = Number(value);
   return Number.isFinite(number) ? number.toFixed(decimals) : '--';
 };
@@ -303,7 +303,6 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
   );
   const oxygen = getAverageOxygenSaturation(spo2);
   const breathingStatus = getNighttimeBreathingStatus(spo2);
-  const heartRateSeries = useMemo(() => parseMetricSeries(sleepModel?.heart_rate), [sleepModel]);
   const contributors = sleep?.contributors || {};
   const datePresentation = calendarDates.getDatePresentation(detailDate);
 
@@ -335,6 +334,7 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        onMouseDown={onClose}
       >
         <motion.div
           role="dialog"
@@ -424,30 +424,12 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
                 <SleepStagesChart sleepModel={sleepModel} summary={summary} onOpen={() => setIsSleepStagesOpen(true)} />
                 <OxygenCard value={oxygen} onOpen={() => setInfoTopic('oxygen')} />
                 <NighttimeBreathingCard status={breathingStatus} onOpen={() => setInfoTopic('breathing')} />
-                <MetricTrendChart
-                  title="Lowest Heart Rate"
-                  headline={summary ? displayNumber(summary.lowestHeartRate) : '--'}
-                  unit="bpm"
-                  secondaryLabel="Average"
-                  secondaryValue={summary ? displayNumber(summary.averageHeartRate) : '--'}
-                  baselineValue={summary?.averageHeartRate}
-                  series={heartRateSeries}
-                  startTimestamp={sleepModel?.bedtime_start}
-                  endTimestamp={sleepModel?.bedtime_end}
-                  axisKind="heartRate"
-                />
-                <MetricTrendChart
-                  title="Average Heart Rate"
-                  headline={summary ? displayNumber(summary.averageHeartRate) : '--'}
-                  unit="bpm"
-                  secondaryLabel="Lowest"
-                  secondaryValue={summary ? displayNumber(summary.lowestHeartRate) : '--'}
-                  baselineValue={summary?.averageHeartRate}
-                  series={heartRateSeries}
-                  startTimestamp={sleepModel?.bedtime_start}
-                  endTimestamp={sleepModel?.bedtime_end}
-                  axisKind="heartRate"
-                />
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <StaticMetric label="Breathing Rate" value={sleepModel ? displayNumber(sleepModel.average_breath, 1) : '--'} unit="br/min" onOpen={() => setDrillMetric('respiratoryRate')} />
+                  <StaticMetric label="Average Heart Rate" value={summary ? displayNumber(summary.averageHeartRate) : '--'} unit="bpm" onOpen={() => setDrillMetric('averageHeartRate')} />
+                  <StaticMetric label="Lowest Heart Rate" value={summary ? displayNumber(summary.lowestHeartRate) : '--'} unit="bpm" onOpen={() => setDrillMetric('lowestHeartRate')} />
+                  <StaticMetric label="Average HRV" value={sleepModel ? displayNumber(sleepModel.average_hrv) : '--'} unit="ms" onOpen={() => setDrillMetric('averageHrv')} />
+                </div>
               </div>
             </section>
           </div>

@@ -27,7 +27,7 @@ test('large sleep timing variation maps through semantic score bands', () => {
     history(['20:00', '23:30', '02:00', '21:00', '01:30'], ['04:00', '08:30', '11:00', '05:00', '10:30']),
     '2026-06-05',
   );
-  assert.equal(result.status, 'Bad');
+  assert.equal(result.status, 'Poor');
   assert.ok(result.score < 60);
 });
 

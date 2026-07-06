@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { buildActivityCardSnapshot, buildSleepCardSnapshot } from '../src/utils/cardSnapshots.js';
 
-test('sleep snapshot contains only the summary, contributors, and stages shown on the main card', () => {
+test('sleep snapshot contains the summary, contributors, stages, and key metrics shown on the main card', () => {
   const snapshot = buildSleepCardSnapshot(
     {
       day: '2026-07-03',
@@ -30,7 +30,10 @@ test('sleep snapshot contains only the summary, contributors, and stages shown o
   assert.match(snapshot, /Sleep Summary/);
   assert.match(snapshot, /Sleep Contributors/);
   assert.match(snapshot, /Sleep Stages/);
-  assert.doesNotMatch(snapshot, /Key Metrics/);
+  assert.match(snapshot, /Key Metrics/);
+  assert.match(snapshot, /Total Sleep: 4h 40m/);
+  assert.match(snapshot, /Time in Bed: 5h/);
+  assert.match(snapshot, /Avg HRV: 50 ms/);
   assert.doesNotMatch(snapshot, /Sleep Regularity/);
   assert.doesNotMatch(snapshot, /Sleep Debt/);
   assert.doesNotMatch(snapshot, /Optimal Bedtime/);
@@ -38,20 +41,28 @@ test('sleep snapshot contains only the summary, contributors, and stages shown o
   assert.doesNotMatch(snapshot, /Breathing Rate/);
 });
 
-test('activity snapshot contains only the score shown on the main card', () => {
+test('activity snapshot contains the score, contributors, and key metrics shown on the main card', () => {
   const snapshot = buildActivityCardSnapshot({
     day: '2026-07-03',
     score: 76,
     contributors: { stay_active: 80 },
     steps: 10_000,
     active_calories: 500,
+    target_calories: 625,
     high_activity_time: 1800,
+    medium_activity_time: 600,
+    low_activity_time: 1200,
+    total_calories: 2300,
   });
 
   assert.match(snapshot, /Activity Summary/);
   assert.match(snapshot, /Score: 76/);
-  assert.doesNotMatch(snapshot, /Activity Contributors/);
-  assert.doesNotMatch(snapshot, /Activity Metrics/);
+  assert.match(snapshot, /Activity Contributors/);
+  assert.match(snapshot, /Stay Active: 80\/100/);
+  assert.match(snapshot, /Key Metrics/);
+  assert.match(snapshot, /Goal Progress: 80%/);
+  assert.match(snapshot, /Total Burn: 2,300 kcal/);
+  assert.match(snapshot, /Activity Time: 1h/);
+  assert.match(snapshot, /Steps: 10,000/);
   assert.doesNotMatch(snapshot, /Activity Breakdown/);
-  assert.doesNotMatch(snapshot, /Steps/);
 });

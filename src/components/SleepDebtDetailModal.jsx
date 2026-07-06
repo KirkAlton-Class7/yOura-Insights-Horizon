@@ -2,16 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Info, X } from 'lucide-react';
 import CalendarPicker from './CalendarPicker';
-import { formatChartPointLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
+import { formatChartPointLabel, SvgChartAxisLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
 import MetricDrilldownModal from './MetricDrilldownModal';
 import SleepInfoModal from './SleepInfoModal';
 import TrendPeriodFooter from './TrendPeriodFooter';
 import UnavailableState from './UnavailableState';
+import useSwipePaging from '../hooks/useSwipePaging';
+import { useToast } from '../context/toast';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableRecordDates } from '../utils/dataAvailability';
 import { formatSleepDebt } from '../utils/sleepDebt';
-import { getSleepDebtHistory } from '../utils/sleepDebtDetails';
+import { getSleepDebtTrendSeries } from '../utils/sleepDebtDetails';
 import { formatSleepDuration } from '../utils/sleepDetails';
+import { TREND_DEFAULT_RANGES, TREND_RANGE_CONFIG } from '../utils/trendRanges';
 
 const hourValue = seconds => seconds === null ? null : seconds / 3600;
 
@@ -19,11 +22,11 @@ function DebtChart({ history, mode, selectedKey, onSelect }) {
   const labelState = useChartPointLabel();
   const width = 900;
   const height = 360;
-  const padding = { left: 78, right: 142, top: 44, bottom: 70 };
+  const padding = { left: 96, right: 142, top: 44, bottom: 84 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
   const selected = history.find(day => day.date === selectedKey) || history[history.length - 1];
-  const xFor = index => padding.left + (index / Math.max(1, history.length - 1)) * plotWidth;
+  const xFor = index => padding.left + ((index + 0.5) / history.length) * plotWidth;
   const maxHours = mode === 'debt'
     ? Math.max(6, ...history.map(day => hourValue(day.debtSeconds) || 0))
     : Math.max(9, ...history.map(day => hourValue(day.totalSleepSeconds) || 0));
@@ -32,6 +35,7 @@ function DebtChart({ history, mode, selectedKey, onSelect }) {
   const observed = history
     .map((day, index) => ({ day, index, value: hourValue(mode === 'debt' ? day.debtSeconds : day.totalSleepSeconds) }))
     .filter(point => point.value !== null);
+  const labelEvery = Math.max(1, Math.ceil(history.length / 8));
 
   if (!observed.length) {
     return <UnavailableState title={`${mode === 'debt' ? 'Sleep debt' : 'Total sleep'} trend unavailable`} description="Not enough sleep history is available for this chart." />;
@@ -150,14 +154,11 @@ function DebtChart({ history, mode, selectedKey, onSelect }) {
           })
         )}
 
-        {history.map((day, index) => {
-          const date = calendarDates.getDatePresentation(day.date);
-          return (
-            <text key={day.date} x={xFor(index)} y={height - 28} textAnchor="middle" fill={day.date === selected.date ? '#f8fafc' : 'rgba(148,163,184,0.75)'} fontSize="16" fontWeight={day.date === selected.date ? '700' : '500'}>
-              {date.weekdayShort}
-            </text>
-          );
-        })}
+        {history.map((day, index) => (
+          index % labelEvery === 0 || index === history.length - 1 ? (
+            <SvgChartAxisLabel key={day.key} x={xFor(index)} y={height - 44} chartKey={day.key} fallback={day.label} active={day.key === selected.key} />
+          ) : null
+        ))}
         {observed.map(point => point.day.date === labelState.activeKey ? (
           <SvgChartPointLabel key={`label-${point.day.date}`} x={xFor(point.index)} y={yFor(point.value)} label={formatChartPointLabel(point.day.date)} chartWidth={width} chartHeight={height} fading={labelState.fading} />
         ) : null)}
@@ -190,22 +191,65 @@ function InfoMetricCard({ title, value, badge, onOpen }) {
 }
 
 export default function SleepDebtDetailModal({ appData, selectedDate, onClose }) {
-  const [mode, setMode] = useState('debt');
+  const { showToast } = useToast();
+  const [metricMode, setMetricMode] = useState('debt');
+  const [periodMode, setPeriodMode] = useState('day');
   const [anchorDate, setAnchorDate] = useState(selectedDate);
   const [selectedPointDate, setSelectedPointDate] = useState(selectedDate);
   const [infoTopic, setInfoTopic] = useState(null);
   const [showTotalSleepTrend, setShowTotalSleepTrend] = useState(false);
-  const history = useMemo(() => getSleepDebtHistory(appData.sleepmodel || {}, anchorDate), [anchorDate, appData.sleepmodel]);
+  const [ranges, setRanges] = useState(() => ({ ...TREND_DEFAULT_RANGES }));
+  const [rangeDrafts, setRangeDrafts] = useState(() => Object.fromEntries(
+    Object.entries(TREND_DEFAULT_RANGES).map(([key, value]) => [key, String(value)]),
+  ));
+  const rangeConfig = TREND_RANGE_CONFIG[periodMode];
+  const series = useMemo(
+    () => getSleepDebtTrendSeries(appData.sleepmodel || {}, periodMode, anchorDate, ranges[periodMode]),
+    [anchorDate, appData.sleepmodel, periodMode, ranges],
+  );
+  const history = series.points;
   const availableDates = useMemo(() => getAvailableRecordDates(
     appData.sleepmodel,
     record => Number(record?.total_sleep_duration) > 0
       || Number(record?.deep_sleep_duration || 0) + Number(record?.rem_sleep_duration || 0) + Number(record?.light_sleep_duration || 0) > 0,
   ), [appData.sleepmodel]);
-  const selected = history.find(day => day.date === selectedPointDate) || history[history.length - 1];
+  const selected = history.find(day => day.key === selectedPointDate) || history.findLast(day => day.debtSeconds !== null || day.totalSleepSeconds !== null) || history[history.length - 1];
   const firstAvailable = availableDates[0];
   const lastAvailable = availableDates[availableDates.length - 1];
-  const canPrevious = Boolean(firstAvailable && firstAvailable < history[0].date);
-  const canNext = Boolean(lastAvailable && lastAvailable > anchorDate);
+  const canPrevious = Boolean(firstAvailable && firstAvailable < series.windowStart);
+  const canNext = Boolean(lastAvailable && lastAvailable > series.windowEnd);
+
+  const movePeriod = direction => {
+    const nextAnchor = periodMode === 'day'
+      ? calendarDates.addDays(anchorDate, direction * ranges.day)
+      : periodMode === 'week'
+        ? calendarDates.addDays(anchorDate, direction * ranges.week * 7)
+        : calendarDates.addDateMonths(anchorDate, direction * ranges.month);
+    setAnchorDate(nextAnchor);
+    setSelectedPointDate(periodMode === 'week' ? calendarDates.getWeekDates(nextAnchor)[0] : periodMode === 'month' ? calendarDates.toYearMonth(nextAnchor) : nextAnchor);
+  };
+  const swipePaging = useSwipePaging({ canPrevious, canNext, onPrevious: () => movePeriod(-1), onNext: () => movePeriod(1) });
+
+  const changePeriodMode = nextMode => {
+    setPeriodMode(nextMode);
+    setAnchorDate(selectedDate);
+    setSelectedPointDate(nextMode === 'week' ? calendarDates.getWeekDates(selectedDate)[0] : nextMode === 'month' ? calendarDates.toYearMonth(selectedDate) : selectedDate);
+  };
+
+  const commitRange = () => {
+    const value = Number(rangeDrafts[periodMode]);
+    if (!Number.isInteger(value) || value < rangeConfig.minimum || value > rangeConfig.maximum) {
+      showToast({ title: 'Invalid Range', message: `Enter a whole number from ${rangeConfig.minimum} to ${rangeConfig.maximum} ${rangeConfig.unit}.`, type: 'warning' });
+      setRangeDrafts(current => ({ ...current, [periodMode]: String(ranges[periodMode]) }));
+      return;
+    }
+    setRanges(current => ({ ...current, [periodMode]: value }));
+  };
+
+  const selectCalendarDate = date => {
+    setAnchorDate(date);
+    setSelectedPointDate(periodMode === 'week' ? calendarDates.getWeekDates(date)[0] : periodMode === 'month' ? calendarDates.toYearMonth(date) : date);
+  };
 
   useEffect(() => {
     const closeOnEscape = event => {
@@ -225,6 +269,7 @@ export default function SleepDebtDetailModal({ appData, selectedDate, onClose })
       <motion.div
         className="fixed inset-0 z-[180] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onMouseDown={onClose}
         data-sleep-debt-dialog="true"
       >
         <motion.div
@@ -241,7 +286,7 @@ export default function SleepDebtDetailModal({ appData, selectedDate, onClose })
             </button>
             <h2 className="font-outfit text-xl font-semibold text-slate-100">Sleep Debt</h2>
             <div className="flex items-center gap-1">
-              <CalendarPicker availableDates={availableDates} selectedDate={anchorDate} onSelect={date => { setAnchorDate(date); setSelectedPointDate(date); }} calendarScope="nested" buttonClassName="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-slate-100" buttonLabel="Choose Sleep Debt date" />
+              <CalendarPicker availableDates={availableDates} selectedDate={anchorDate} onSelect={selectCalendarDate} calendarScope="nested" buttonClassName="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-slate-100" buttonLabel="Choose Sleep Debt date" />
               <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Close sleep debt details">
                 <X className="h-5 w-5" />
               </button>
@@ -249,29 +294,40 @@ export default function SleepDebtDetailModal({ appData, selectedDate, onClose })
           </header>
 
           <div className="space-y-7 p-4 sm:p-7">
+            <div className="grid grid-cols-3 rounded-2xl bg-slate-900/80 p-1">
+              {[['day', 'Day'], ['week', 'Week'], ['month', 'Month']].map(([key, label]) => (
+                <button key={key} type="button" onClick={() => changePeriodMode(key)} className={`rounded-xl px-3 py-3 font-outfit text-base font-semibold transition-colors ${periodMode === key ? 'bg-slate-600 text-white' : 'text-cyan-300 hover:bg-white/5'}`} aria-pressed={periodMode === key}>{label}</button>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <label className="flex items-center gap-2 text-sm text-slate-400">Range
+                <input type="number" min={rangeConfig.minimum} max={rangeConfig.maximum} value={rangeDrafts[periodMode]} onChange={event => setRangeDrafts(current => ({ ...current, [periodMode]: event.target.value }))} onBlur={commitRange} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commitRange(); event.currentTarget.blur(); } }} className="w-20 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-center font-outfit text-slate-100 outline-none focus:border-cyan-300" aria-label={`Sleep debt range in ${rangeConfig.unit}`} />
+                <span>{rangeConfig.unit}</span>
+              </label>
+            </div>
             <div className="grid grid-cols-2 rounded-2xl bg-slate-900/80 p-1">
               {[['debt', 'Sleep Debt'], ['total', 'Total Sleep']].map(([key, label]) => (
-                <button key={key} type="button" onClick={() => setMode(key)} className={`rounded-xl px-3 py-3 font-outfit text-base font-semibold transition-colors ${mode === key ? 'bg-slate-100 text-slate-950' : 'text-slate-300 hover:bg-white/5'}`} aria-pressed={mode === key}>
+                <button key={key} type="button" onClick={() => setMetricMode(key)} className={`rounded-xl px-3 py-3 font-outfit text-base font-semibold transition-colors ${metricMode === key ? 'bg-slate-100 text-slate-950' : 'text-slate-300 hover:bg-white/5'}`} aria-pressed={metricMode === key}>
                   {label}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
-              <button type="button" disabled={!canPrevious} onClick={() => setAnchorDate(date => calendarDates.addDays(date, -7))} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label="Previous seven sleep days">
+            <div className="flex touch-pan-y items-center gap-2" {...swipePaging}>
+              <button type="button" disabled={!canPrevious} onClick={() => movePeriod(-1)} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Previous ${periodMode} sleep period`}>
                 <ChevronLeft className="mx-auto h-5 w-5" />
               </button>
-              <div className="min-w-0 flex-1"><DebtChart history={history} mode={mode} selectedKey={selected.date} onSelect={setSelectedPointDate} /></div>
-              <button type="button" disabled={!canNext} onClick={() => setAnchorDate(date => calendarDates.addDays(date, 7))} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label="Next seven sleep days">
+              <div className="min-w-0 flex-1"><DebtChart history={history} mode={metricMode} selectedKey={selected.key} onSelect={setSelectedPointDate} /></div>
+              <button type="button" disabled={!canNext} onClick={() => movePeriod(1)} className="h-12 w-11 flex-shrink-0 rounded-xl border border-white/10 bg-slate-900 text-slate-300 disabled:opacity-25" aria-label={`Next ${periodMode} sleep period`}>
                 <ChevronRight className="mx-auto h-5 w-5" />
               </button>
             </div>
 
             <TrendPeriodFooter
-              kind="dayToDay"
-              startDate={history[0]?.date}
-              endDate={history.at(-1)?.date}
-              summary={mode === 'debt'
+              kind={periodMode === 'day' ? 'dayToDay' : periodMode === 'week' ? 'weekToWeek' : 'monthToMonth'}
+              startDate={series.windowStart}
+              endDate={series.windowEnd}
+              summary={metricMode === 'debt'
                 ? (selected.debtSeconds === null ? null : formatSleepDebt(selected.debtSeconds))
                 : (selected.totalSleepSeconds === null ? null : formatSleepDuration(selected.totalSleepSeconds))}
             />

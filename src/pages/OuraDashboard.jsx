@@ -7,6 +7,7 @@ import DateNav from '../components/DateNav';
 import QuoteCard from '../components/QuoteCard';
 import ScoreSummaryGrid from '../components/ScoreSummaryGrid';
 import WearCoverageCard from '../components/WearCoverageCard';
+import WearCoverageDetailModal from '../components/WearCoverageDetailModal';
 import CompareModal from '../components/CompareModal';
 import ReadinessDetailModal from '../components/ReadinessDetailModal';
 import SleepDetailModal from '../components/SleepDetailModal';
@@ -16,7 +17,9 @@ import ActivityCard from '../components/ActivityCard';
 import ActivityDetailModal from '../components/ActivityDetailModal';
 import StressResilienceCard from '../components/StressResilienceCard';
 import CardioCard from '../components/CardioCard';
+import CardioDetailModal from '../components/CardioDetailModal';
 import BiometricsCard from '../components/BiometricsCard';
+import BiometricsDetailModal from '../components/BiometricsDetailModal';
 import BackgroundManager from '../components/BackgroundManager';
 import { buildDashboardSnapshot } from '../utils/snapshot';
 import { writeClipboardText } from '../utils/clipboard';
@@ -33,6 +36,9 @@ export default function OuraDashboard() {
   const [readinessDetailTarget, setReadinessDetailTarget] = useState(null);
   const [sleepDetailTarget, setSleepDetailTarget] = useState(null);
   const [activityDetailTarget, setActivityDetailTarget] = useState(null);
+  const [isCardioDetailOpen, setIsCardioDetailOpen] = useState(false);
+  const [isBiometricsDetailOpen, setIsBiometricsDetailOpen] = useState(false);
+  const [isWearCoverageOpen, setIsWearCoverageOpen] = useState(false);
   const [areWidgetsHidden, setAreWidgetsHidden] = useState(false);
   const {
     selectedDate,
@@ -111,6 +117,9 @@ export default function OuraDashboard() {
     setReadinessDetailTarget(null);
     setSleepDetailTarget(null);
     setActivityDetailTarget(null);
+    setIsCardioDetailOpen(false);
+    setIsBiometricsDetailOpen(false);
+    setIsWearCoverageOpen(false);
     setAreWidgetsHidden(false);
     setAppData({});
     setAvailableDates([]);
@@ -206,12 +215,12 @@ export default function OuraDashboard() {
           />
 
           <section id="wear-coverage" className="scroll-mt-20">
-            <WearCoverageCard data={activityData} selectedDate={selectedDate} />
+            <WearCoverageCard data={activityData} selectedDate={selectedDate} onOpenDetails={() => setIsWearCoverageOpen(true)} />
           </section>
 
           <div className="space-y-6">
             <section id="readiness" className="scroll-mt-20">
-              <ReadinessCard data={readinessData} onOpenDetails={setReadinessDetailTarget} />
+              <ReadinessCard data={readinessData} sleepmodelData={sleepmodelData} onOpenDetails={setReadinessDetailTarget} />
             </section>
             <section id="sleep" className="scroll-mt-20">
               <SleepCard
@@ -239,6 +248,7 @@ export default function OuraDashboard() {
                 dateWindow={dateWindow}
                 allData={appData.cardiovascularage}
                 selectedDate={selectedDate}
+                onOpenDetails={() => setIsCardioDetailOpen(true)}
               />
             </section>
             <section id="biometrics" className="scroll-mt-20">
@@ -246,6 +256,7 @@ export default function OuraDashboard() {
                 spo2Data={spo2Data}
                 heartrateData={heartrateData}
                 temperatureData={temperatureData}
+                onOpenDetails={() => setIsBiometricsDetailOpen(true)}
               />
             </section>
           </div>
@@ -282,6 +293,27 @@ export default function OuraDashboard() {
               selectedDate={selectedDate}
               initialTarget={activityDetailTarget}
               onClose={() => setActivityDetailTarget(null)}
+            />
+          )}
+          {isCardioDetailOpen && (
+            <CardioDetailModal
+              appData={appData}
+              selectedDate={selectedDate}
+              onClose={() => setIsCardioDetailOpen(false)}
+            />
+          )}
+          {isBiometricsDetailOpen && (
+            <BiometricsDetailModal
+              appData={appData}
+              selectedDate={selectedDate}
+              onClose={() => setIsBiometricsDetailOpen(false)}
+            />
+          )}
+          {isWearCoverageOpen && (
+            <WearCoverageDetailModal
+              appData={appData}
+              selectedDate={selectedDate}
+              onClose={() => setIsWearCoverageOpen(false)}
             />
           )}
         </AnimatePresence>

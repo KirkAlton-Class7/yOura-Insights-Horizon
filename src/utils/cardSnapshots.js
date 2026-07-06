@@ -23,6 +23,15 @@ const SLEEP_CONTRIBUTORS = [
   ['timing', 'Timing'],
 ];
 
+const ACTIVITY_CONTRIBUTORS = [
+  ['meet_daily_targets', 'Meet Daily Targets'],
+  ['move_every_hour', 'Move Every Hour'],
+  ['recovery_time', 'Recovery Time'],
+  ['stay_active', 'Stay Active'],
+  ['training_frequency', 'Training Frequency'],
+  ['training_volume', 'Training Volume'],
+];
+
 const hasValue = value => value !== null && value !== undefined && value !== '';
 
 const displayValue = (value, fallback = '--') => hasValue(value) ? value : fallback;
@@ -30,6 +39,8 @@ const displayValue = (value, fallback = '--') => hasValue(value) ? value : fallb
 const capitalize = value => {
   if (!hasValue(value)) return 'N/A';
   const text = String(value);
+  const normalized = text.trim().toLowerCase();
+  if (normalized === 'bad' || normalized === 'pay attention') return 'Poor';
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
@@ -78,12 +89,16 @@ export function buildReadinessCardSnapshot(data, options = {}) {
   const headerLine = options.dashboard
     ? `Date: ${date}`
     : `${date}: ${displayValue(data?.score)}`;
+  const sleepModel = options.sleepModel;
   return snapshot('Readiness', [
     section('Readiness Summary', [`Score: ${displayValue(data?.score)}`]),
     section('Readiness Contributors', contributorLines(data?.contributors, READINESS_CONTRIBUTORS)),
-    hasValue(data?.temperature_deviation)
-      ? section('Temperature', [`Temperature Deviation: ${Number(data.temperature_deviation).toFixed(2)}°C`])
-      : '',
+    section('Key Metrics', [
+      `Resting HR: ${hasValue(sleepModel?.lowest_heart_rate) ? `${Math.round(Number(sleepModel.lowest_heart_rate))} bpm` : '--'}`,
+      `Avg HRV: ${hasValue(sleepModel?.average_hrv) ? `${Math.round(Number(sleepModel.average_hrv))} ms` : '--'}`,
+      `Body Temp: ${hasValue(data?.temperature_deviation) ? `${Number(data.temperature_deviation).toFixed(2)}°C` : '--'}`,
+      `Respiratory Rate: ${hasValue(sleepModel?.average_breath) ? `${Number(sleepModel.average_breath).toFixed(1)} / min` : '--'}`,
+    ]),
   ], headerLine);
 }
 
@@ -122,6 +137,12 @@ export function buildSleepCardSnapshot(data, sleepmodelData, sleeptimeData, opti
         ? `Timeline: ${formatTime(sleepModel.bedtime_start)} – ${formatTime(sleepModel.bedtime_end)}`
         : '',
     ]));
+    sections.push(section('Key Metrics', [
+      `Total Sleep: ${formatDuration(Number(sleepModel.total_sleep_duration || 0) || asleep)}`,
+      `Time in Bed: ${formatDuration(sleepModel.time_in_bed)}`,
+      `Resting HR: ${hasValue(sleepModel.resting_heart_rate ?? sleepModel.lowest_heart_rate) ? `${Math.round(Number(sleepModel.resting_heart_rate ?? sleepModel.lowest_heart_rate))} bpm` : '--'}`,
+      `Avg HRV: ${hasValue(sleepModel.average_hrv) ? `${Math.round(Number(sleepModel.average_hrv))} ms` : '--'}`,
+    ]));
 
   } else {
     sections.push(section('Sleep Stages and HR', ['Status: No sleep-model data available']));
@@ -135,9 +156,22 @@ export function buildActivityCardSnapshot(data, options = {}) {
   const headerLine = options.dashboard
     ? `Date: ${date}`
     : `${date}: ${displayValue(data?.score)}`;
+  const activeCalories = Number(data?.active_calories);
+  const targetCalories = Number(data?.target_calories);
+  const goalProgress = Number.isFinite(activeCalories) && Number.isFinite(targetCalories) && targetCalories > 0
+    ? Math.round((activeCalories / targetCalories) * 100)
+    : null;
+  const activityTime = Number(data?.high_activity_time || 0) + Number(data?.medium_activity_time || 0) + Number(data?.low_activity_time || 0);
 
   return snapshot('Activity', [
     section('Activity Summary', [`Score: ${displayValue(data?.score)}`]),
+    section('Activity Contributors', contributorLines(data?.contributors, ACTIVITY_CONTRIBUTORS)),
+    section('Key Metrics', [
+      `Goal Progress: ${goalProgress === null ? '--' : `${goalProgress}%`}`,
+      `Total Burn: ${hasValue(data?.total_calories) ? `${Math.round(Number(data.total_calories)).toLocaleString()} kcal` : '--'}`,
+      `Activity Time: ${formatDuration(activityTime)}`,
+      `Steps: ${hasValue(data?.steps) ? Math.round(Number(data.steps)).toLocaleString() : '--'}`,
+    ]),
   ], headerLine);
 }
 

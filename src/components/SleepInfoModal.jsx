@@ -81,6 +81,7 @@ function SleepInfoContent({ topic, onClose }) {
     <motion.div
       className="fixed inset-0 z-[240] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-md"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onMouseDown={onClose}
       data-sleep-info-dialog="true"
     >
       <motion.div

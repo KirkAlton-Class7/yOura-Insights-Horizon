@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import CalendarPicker from './CalendarPicker';
-import { formatChartPointLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
+import { formatChartPointLabel, SvgChartAxisLabel, SvgChartPointLabel, useChartPointLabel } from './ChartPointLabel';
 import TrendPeriodFooter from './TrendPeriodFooter';
 import UnavailableState from './UnavailableState';
+import useSwipePaging from '../hooks/useSwipePaging';
 import { useToast } from '../context/toast';
 import { calendarDates } from '../utils/dateService';
 import {
@@ -30,14 +31,22 @@ const PERIOD_KINDS = Object.freeze({
 
 const roundedAxis = (values, step) => {
   if (!values.length) return { minimum: 0, maximum: step * 2, ticks: [0, step, step * 2] };
-  let minimum = Math.floor(Math.min(...values) / step) * step;
-  let maximum = Math.ceil(Math.max(...values) / step) * step;
-  if (maximum - minimum < step * 2) {
-    minimum -= step;
-    maximum += step;
+  const rawMinimum = Math.min(...values);
+  const rawMaximum = Math.max(...values);
+  const span = Math.max(step, rawMaximum - rawMinimum);
+  const roughStep = Math.max(step, span / 4);
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalized = roughStep / magnitude;
+  const multiplier = [1, 2, 2.5, 5, 10].find(candidate => candidate >= normalized) || 10;
+  const tickStep = multiplier * magnitude;
+  let minimum = Math.floor(rawMinimum / tickStep) * tickStep;
+  let maximum = Math.ceil(rawMaximum / tickStep) * tickStep;
+  if (maximum === minimum) {
+    minimum -= tickStep;
+    maximum += tickStep;
   }
   const ticks = [];
-  for (let value = minimum; value <= maximum + step / 100; value += step) {
+  for (let value = minimum; value <= maximum + tickStep / 100; value += tickStep) {
     ticks.push(Number(value.toFixed(4)));
   }
   return { minimum, maximum, ticks };
@@ -56,6 +65,13 @@ const formatMetricValue = (metric, value) => {
   return `${hours}h${remainder ? ` ${remainder}m` : ''}`;
 };
 
+const formatAxisValue = (metric, value) => {
+  if (metric.durationHours) return `${Number(value).toFixed(Number.isInteger(value) ? 0 : 1)}h`;
+  const absolute = Math.abs(value);
+  if (absolute >= 1000) return `${Number(value / 1000).toFixed(absolute >= 10000 ? 0 : 1)}k`;
+  return formatValue(value, metric.precision);
+};
+
 function TrendChart({ series, selectedKey, onSelect }) {
   const labelState = useChartPointLabel();
   const observed = series.points
@@ -67,7 +83,7 @@ function TrendChart({ series, selectedKey, onSelect }) {
 
   const width = 960;
   const height = 390;
-  const padding = { left: 44, right: 56, top: 28, bottom: 76 };
+  const padding = { left: 82, right: 72, top: 28, bottom: 86 };
   const axis = roundedAxis(observed.map(point => point.value), series.metric.axisStep);
   const range = Math.max(series.metric.axisStep, axis.maximum - axis.minimum);
   const chartWidth = width - padding.left - padding.right;
@@ -99,7 +115,7 @@ function TrendChart({ series, selectedKey, onSelect }) {
               fontSize="17"
               fontWeight="600"
             >
-              {series.metric.durationHours ? `${Math.round(value)}h` : formatValue(value, series.metric.precision)}
+              {formatAxisValue(series.metric, value)}
             </text>
           </g>
         ))}
@@ -122,7 +138,7 @@ function TrendChart({ series, selectedKey, onSelect }) {
               fontSize="17"
               fontWeight="700"
             >
-              {series.metric.durationHours ? `${formatValue(baseline, 1)}h` : formatValue(baseline, series.metric.precision)}
+              {formatAxisValue(series.metric, baseline)}
             </text>
           </>
         )}
@@ -170,17 +186,15 @@ function TrendChart({ series, selectedKey, onSelect }) {
         })}
         {series.points.map((point, index) => (
           index % labelEvery === 0 || index === series.points.length - 1 ? (
-            <text
+            <SvgChartAxisLabel
               key={point.key}
               x={xFor(index)}
               y={height - 24}
-              textAnchor="middle"
-              fill="rgba(148,163,184,0.86)"
-              fontSize="16"
-              fontWeight="600"
-            >
-              {point.label}
-            </text>
+              chartKey={point.key}
+              fallback={point.label}
+              active={point.key === selectedKey}
+              fontSize={15}
+            />
           ) : null
         ))}
         {observed.map(point => point.key === labelState.activeKey ? (
@@ -232,6 +246,12 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose }) {
   const maximum = observedValues.length ? Math.max(...observedValues) : null;
   const canPrevious = Boolean(availableRange && availableRange.earliest < series.windowStart);
   const canNext = Boolean(availableRange && availableRange.latest > series.windowEnd);
+  const swipePaging = useSwipePaging({
+    canPrevious,
+    canNext,
+    onPrevious: () => setAnchorDate(current => shiftMetricDrilldownAnchor(current, mode, -1, ranges[mode])),
+    onNext: () => setAnchorDate(current => shiftMetricDrilldownAnchor(current, mode, 1, ranges[mode])),
+  });
 
   useEffect(() => {
     const closeOnEscape = event => {
@@ -289,6 +309,7 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onMouseDown={onClose}
       data-metric-drilldown="true"
     >
       <motion.div
@@ -387,7 +408,7 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose }) {
             {currentValue !== null && !series.metric.durationHours && <span className="text-2xl text-slate-300">{series.metric.unit}</span>}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex touch-pan-y items-center gap-2" {...swipePaging}>
             <motion.button
               type="button"
               onClick={() => shift(-1)}

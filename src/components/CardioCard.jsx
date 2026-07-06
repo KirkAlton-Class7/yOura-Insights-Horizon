@@ -5,7 +5,7 @@ import { buildCardiovascularCardSnapshot } from '../utils/cardSnapshots';
 import UnavailableState from './UnavailableState';
 import { formatChartPointLabel, HtmlChartPointLabel, useChartPointLabel } from './ChartPointLabel';
 
-export default function CardioCard({ data, dateWindow, allData, selectedDate }) {
+export default function CardioCard({ data, dateWindow, allData, selectedDate, onOpenDetails }) {
   const { showToast } = useToast();
   const labelState = useChartPointLabel();
   const vasAge = data?.vascular_age ? Number(data.vascular_age) : null;
@@ -68,6 +68,8 @@ export default function CardioCard({ data, dateWindow, allData, selectedDate }) 
       snapshotLabel="Cardiovascular snapshot"
       onCopyFailure={() => showToast('Failed to copy Cardiovascular snapshot.')}
       onCopySuccess={() => showToast('Cardiovascular snapshot copied to clipboard.')}
+      onOpen={onOpenDetails}
+      openLabel="Open Cardiovascular Health details"
     >
       <div className="space-y-4">
         {(vasAge !== null || pwv !== null) ? (
