@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "filename": "1-argentina-buenos-aires-cityscape.webp",
+    "filename": "01-argentina-buenos-aires-cityscape.webp",
     "title": "Buenos Aires Cityscape",
     "location": "Buenos Aires, Argentina",
     "photographer": null,
@@ -9,7 +9,7 @@
   },
   {
     "id": 2,
-    "filename": "2-argentina-salta-desert-altiplano.webp",
+    "filename": "02-argentina-salta-desert-altiplano.webp",
     "title": "Salta Altiplano Landscape",
     "location": "Salta, Argentina",
     "photographer": null,
@@ -17,7 +17,7 @@
   },
   {
     "id": 3,
-    "filename": "3-argentina-ushuaia-patagonia-harbor-.webp",
+    "filename": "03-argentina-ushuaia-patagonia-harbor-.webp",
     "title": "Ushuaia Patagonia Harbor",
     "location": "Ushuaia, Argentina",
     "photographer": null,
@@ -25,7 +25,7 @@
   },
   {
     "id": 4,
-    "filename": "4-brazil-bonito.webp",
+    "filename": "04-brazil-bonito.webp",
     "title": "Bonito Clear Water Lagoon",
     "location": "Bonito, Brazil",
     "photographer": null,
@@ -33,7 +33,7 @@
   },
   {
     "id": 5,
-    "filename": "5-brazil-jalpao-state-park.webp",
+    "filename": "05-brazil-jalpao-state-park.webp",
     "title": "Jalapao Sand Dunes Lagoons",
     "location": "Jalapao, Brazil",
     "photographer": null,
@@ -41,7 +41,7 @@
   },
   {
     "id": 6,
-    "filename": "6-brazil-Sugarloaf-andCorcovado-Mountains.webp",
+    "filename": "06-brazil-Sugarloaf-andCorcovado-Mountains.webp",
     "title": "Rio de Janeiro Coastal Mountains",
     "location": "Rio de Janeiro, Brazil",
     "photographer": null,
@@ -49,7 +49,7 @@
   },
   {
     "id": 7,
-    "filename": "7-colombia-bogota-aerial-cityscape.webp",
+    "filename": "07-colombia-bogota-aerial-cityscape.webp",
     "title": "Bogota Aerial Cityscape",
     "location": "Bogota, Colombia",
     "photographer": null,
@@ -57,7 +57,7 @@
   },
   {
     "id": 8,
-    "filename": "8-colombia-chicamocha-canyon-highland-river.webp",
+    "filename": "08-colombia-chicamocha-canyon-highland-river.webp",
     "title": "Chicamocha Canyon River",
     "location": "Chicamocha, Colombia",
     "photographer": null,
@@ -65,7 +65,7 @@
   },
   {
     "id": 9,
-    "filename": "9-colombia-ejecafetero-andean-highlands.webp",
+    "filename": "09-colombia-ejecafetero-andean-highlands.webp",
     "title": "Eje Cafetero Andean Highlands",
     "location": "Eje Cafetero, Colombia",
     "photographer": null,
@@ -358,5 +358,21 @@
     "location": "Ho Chi Minh City, Vietnam",
     "photographer": null,
     "tags": ["vietnam", "city", "skyline", "night", "urban"]
+  },
+  {
+    "id": 46,
+    "filename": "14-moscow-business-center-skyline.webp",
+    "title": "Moscow Business Center Skyline",
+    "location": "Moscow",
+    "photographer": "Kalyakan",
+    "tags": ["horizon", "moscow", "city", "skyline", "business-center"]
+  },
+  {
+    "id": 47,
+    "filename": "18-san-francisco-night-lights.webp",
+    "title": "San Francisco Night Lights",
+    "location": "San Francisco",
+    "photographer": "Tierney",
+    "tags": ["horizon", "san-francisco", "city", "night", "lights"]
   }
 ]

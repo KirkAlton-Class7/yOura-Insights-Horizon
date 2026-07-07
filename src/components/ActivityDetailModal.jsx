@@ -350,6 +350,9 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
             <section>
               <h2 className="font-outfit text-xl font-semibold text-slate-100">Activities</h2>
               <div className="mt-4">
+                <MetricCard label="Inactivity Alerts" value={displayNumber(activity?.inactivity_alerts)} onOpen={() => setDrillMetric('activityInactivityAlerts')} />
+              </div>
+              <div className="mt-4">
                 <DailyMovementCard
                   activity={activity}
                   selectedHour={selectedMovementHour}
@@ -357,9 +360,6 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
                   onOpenDetails={() => setMovementDrilldownMode('day')}
                   onOpenInfo={() => setInfoTopic('movement')}
                 />
-              </div>
-              <div className="mt-4">
-                <MetricCard label="Inactivity Alerts" value={displayNumber(activity?.inactivity_alerts)} onOpen={() => setDrillMetric('activityInactivityAlerts')} />
               </div>
             </section>
 

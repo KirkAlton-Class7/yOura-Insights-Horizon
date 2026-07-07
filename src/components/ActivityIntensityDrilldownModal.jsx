@@ -85,7 +85,7 @@ function IntensityChart({ points, selectedKey, onSelect }) {
   );
 }
 
-function ActivityIntensityContent({ appData, initialDate, onClose }) {
+function ActivityIntensityContent({ appData, initialDate, onClose, onBack = onClose }) {
   const { showToast } = useToast();
   const [mode, setMode] = useState('day');
   const [anchorDate, setAnchorDate] = useState(initialDate);
@@ -130,7 +130,7 @@ function ActivityIntensityContent({ appData, initialDate, onClose }) {
     <motion.div className="fixed inset-0 z-[180] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose} data-activity-intensity-dialog="true">
       <motion.div role="dialog" aria-modal="true" aria-label="Activity intensity breakdown" className="max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950 shadow-2xl" initial={{ opacity: 0, scale: 0.98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98, y: 12 }} onMouseDown={event => event.stopPropagation()}>
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 py-4 backdrop-blur-xl sm:px-6">
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Activity details"><ChevronLeft className="h-6 w-6" /></button>
+          <button type="button" onClick={onBack} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Activity details"><ChevronLeft className="h-6 w-6" /></button>
           <h2 className="font-outfit text-xl font-semibold text-slate-100">Activity Intensity</h2>
           <div className="flex items-center gap-1"><CalendarPicker availableDates={availableDates} selectedDate={anchorDate} onSelect={date => { setAnchorDate(date); setSelectedKey(date); }} calendarScope="nested" buttonClassName="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-slate-100" buttonLabel="Choose Activity Intensity date" /><button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Close Activity Intensity"><X className="h-5 w-5" /></button></div>
         </header>

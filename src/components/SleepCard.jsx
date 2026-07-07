@@ -6,6 +6,7 @@ import { getScoreColor } from '../utils/colors';
 import { buildSleepCardSnapshot } from '../utils/cardSnapshots';
 import UnavailableState from './UnavailableState';
 import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
+import SleepStageBars from './SleepStageBars';
 
 const SLEEP_CONTRIBUTOR_KEYS = Object.freeze(['deep_sleep', 'rem_sleep', 'total_sleep', 'efficiency', 'restfulness', 'latency', 'timing']);
 
@@ -20,7 +21,7 @@ const formatSeconds = (secs) => {
 
 const displayNumber = value => {
   const number = Number(value);
-  return Number.isFinite(number) ? String(Math.round(number)) : '--';
+  return Number.isFinite(number) ? Math.round(number).toLocaleString() : '--';
 };
 
 function MetricWidget({ label, value, unit, onOpen }) {
@@ -111,20 +112,11 @@ export default function SleepCard({
     `;
 
     const stageRows = [
-      { label: 'Awake', dur: awake, color: AWAKE_C, pct: tot4 ? awake / tot4 : 0 },
-      { label: 'REM', dur: rem, color: REM_C, pct: total ? rem / total : 0 },
-      { label: 'Light', dur: light, color: LIGHT_C, pct: total ? light / total : 0 },
-      { label: 'Deep', dur: deep, color: DEEP_C, pct: total ? deep / total : 0 },
+      { key: 'awake', label: 'Awake', seconds: awake, percentage: tot4 ? (awake / tot4) * 100 : 0 },
+      { key: 'rem', label: 'REM', seconds: rem, percentage: total ? (rem / total) * 100 : 0 },
+      { key: 'light', label: 'Light', seconds: light, percentage: total ? (light / total) * 100 : 0 },
+      { key: 'deep', label: 'Deep', seconds: deep, percentage: total ? (deep / total) * 100 : 0 },
     ];
-
-    const legend = stageRows.map(row => (
-      <div key={row.label} className="flex items-center gap-3">
-        <div className="w-2.5 h-2.5 rounded-full" style={{ background: row.color }} />
-        <span className="text-xs text-slate-400 w-12">{row.label}</span>
-        <span className="ml-auto text-xs font-outfit font-semibold tabular-nums text-white">{formatSeconds(row.dur)}</span>
-        <span className="text-xs text-slate-500 w-10 text-right">{Math.round(row.pct * 100)}%</span>
-      </div>
-    ));
 
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
@@ -136,7 +128,9 @@ export default function SleepCard({
           <div className="mb-3 text-xs text-slate-500 uppercase tracking-wider">Sleep Stages</div>
           <div className="flex flex-col items-center gap-4 sm:flex-row">
             <div dangerouslySetInnerHTML={{ __html: donutSVG }} />
-            <div className="flex-1 space-y-1">{legend}</div>
+            <div className="w-full flex-1">
+              <SleepStageBars stages={stageRows} />
+            </div>
           </div>
         </button>
       </div>

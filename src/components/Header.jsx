@@ -12,7 +12,7 @@ export default function Header({
   areWidgetsHidden,
   onToggleWidgets,
 }) {
-  const isImageMode = backgroundMode === 'image';
+  const isHorizonMode = backgroundMode === 'horizon';
 
   return (
     <motion.header
@@ -37,8 +37,9 @@ export default function Header({
                         stroke-dasharray="226" stroke-dashoffset="56" stroke-linecap="round"
                         transform="rotate(-90 40 40)"/>
               </svg>
-              <span className="font-outfit font-bold text-sm uppercase tracking-wider">
-                Oura <span className="text-cyan-400">Insights</span>
+              <span className="font-outfit font-bold text-sm tracking-wider">
+                yOura <span className="text-cyan-400">Insights</span>{' '}
+                <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">Horizon</span>
               </span>
             </div>
             {dateString && (
@@ -50,29 +51,29 @@ export default function Header({
 
           <div className="flex flex-shrink-0 items-center gap-3">
             <div className="flex items-center gap-3">
-              {/* Image Navigation Arrows */}
+              {/* Horizon Navigation Arrows */}
               <div className="flex items-center gap-1">
                 <button
                   onClick={onPrevImage}
-                  disabled={!isImageMode}
+                  disabled={!isHorizonMode}
                   className={`p-1.5 rounded-full transition-all ${
-                    isImageMode
+                    isHorizonMode
                       ? 'hover:bg-white/10 text-slate-300'
                       : 'text-slate-600 cursor-not-allowed opacity-50'
                   }`}
-                  title="Previous image"
+                  title="Previous Horizon background"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={onNextImage}
-                  disabled={!isImageMode}
+                  disabled={!isHorizonMode}
                   className={`p-1.5 rounded-full transition-all ${
-                    isImageMode
+                    isHorizonMode
                       ? 'hover:bg-white/10 text-slate-300'
                       : 'text-slate-600 cursor-not-allowed opacity-50'
                   }`}
-                  title="Next image"
+                  title="Next Horizon background"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -82,15 +83,16 @@ export default function Header({
               <button
                 onClick={onToggleBackground}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
-                title={backgroundMode === 'particles' ? 'Show background image' : 'Show particles'}
+                title={isHorizonMode ? 'Turn Horizon off' : 'Turn Horizon on'}
+                aria-pressed={isHorizonMode}
               >
-                {backgroundMode === 'particles' ? (
-                  <Image className="w-4 h-4" />
-                ) : (
+                {isHorizonMode ? (
                   <ImageOff className="w-4 h-4" />
+                ) : (
+                  <Image className="w-4 h-4" />
                 )}
                 <span className="hidden sm:inline">
-                  {backgroundMode === 'particles' ? 'Image' : 'Particles'}
+                  Horizon
                 </span>
               </button>
             </div>

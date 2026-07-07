@@ -208,7 +208,7 @@ function TimeInBedChart({ history, selected, onSelect }) {
   );
 }
 
-export default function SleepRegularityDetailModal({ appData, selectedDate, onClose }) {
+export default function SleepRegularityDetailModal({ appData, selectedDate, onClose, onBack = onClose }) {
   const { showToast } = useToast();
   const [metricMode, setMetricMode] = useState('regularity');
   const [periodMode, setPeriodMode] = useState('day');
@@ -296,7 +296,7 @@ export default function SleepRegularityDetailModal({ appData, selectedDate, onCl
           onMouseDown={event => event.stopPropagation()}
         >
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 py-4 backdrop-blur-xl sm:px-6">
-            <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Sleep details"><ChevronLeft className="h-6 w-6" /></button>
+            <button type="button" onClick={onBack} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Sleep details"><ChevronLeft className="h-6 w-6" /></button>
             <h2 className="font-outfit text-xl font-semibold text-slate-100">Sleep Regularity</h2>
             <div className="flex items-center gap-1">
               <CalendarPicker availableDates={availableDates} selectedDate={anchorDate} onSelect={selectCalendarDate} calendarScope="nested" buttonClassName="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-slate-100" buttonLabel="Choose Sleep Regularity date" />

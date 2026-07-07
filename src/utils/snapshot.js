@@ -58,7 +58,7 @@ export function buildDashboardSnapshot({ selectedDate, dateWindow, appData }) {
   }
 
   return [
-    `Oura Insights Dashboard Snapshot\n================================\nDate: ${selectedDate}`,
+    `yOura Insights Horizon Dashboard Snapshot\n===========================================\nDate: ${selectedDate}`,
     ...sections,
     `================================\nSnapshot generated: ${calendarDates.formatCurrentDateTime()}`,
   ].join('\n\n');

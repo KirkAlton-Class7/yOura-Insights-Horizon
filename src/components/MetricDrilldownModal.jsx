@@ -53,7 +53,12 @@ const roundedAxis = (values, step) => {
 };
 
 const formatValue = (value, precision) => (
-  value === null || value === undefined ? '--' : Number(value).toFixed(precision)
+  value === null || value === undefined
+    ? '--'
+    : Number(value).toLocaleString(undefined, {
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision,
+    })
 );
 
 const formatMetricValue = (metric, value) => {
@@ -213,7 +218,7 @@ function TrendChart({ series, selectedKey, onSelect }) {
   );
 }
 
-function MetricDrilldownContent({ appData, metricKey, initialDate, onClose }) {
+function MetricDrilldownContent({ appData, metricKey, initialDate, onClose, onBack = onClose }) {
   const { showToast } = useToast();
   const [mode, setMode] = useState('day');
   const [anchorDate, setAnchorDate] = useState(initialDate);
@@ -326,7 +331,7 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose }) {
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 py-4 backdrop-blur-xl sm:px-6">
           <button
             type="button"
-            onClick={onClose}
+            onClick={onBack}
             className="rounded-xl p-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Back to details"
           >

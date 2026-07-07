@@ -139,7 +139,7 @@ export default function UploadScreen({ onDataLoaded }) {
           </svg>
         </div>
         <h1 className="text-4xl font-outfit font-extrabold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent bg-[length:200%] animate-gradient-shift">
-          yOura Insights
+          yOura Insights Horizon
         </h1>
         <p className="text-slate-400 mt-2 max-w-md mx-auto">
           Upload your exported Oura Ring CSV files to view your personal health dashboard

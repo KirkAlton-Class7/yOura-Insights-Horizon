@@ -20,12 +20,15 @@ import CardioCard from '../components/CardioCard';
 import CardioDetailModal from '../components/CardioDetailModal';
 import BiometricsCard from '../components/BiometricsCard';
 import BiometricsDetailModal from '../components/BiometricsDetailModal';
+import MetricDrilldownModal from '../components/MetricDrilldownModal';
 import BackgroundManager from '../components/BackgroundManager';
 import { buildDashboardSnapshot } from '../utils/snapshot';
 import { writeClipboardText } from '../utils/clipboard';
 import { useToast } from '../context/toast';
 import { useDateNavigation } from '../hooks/useDateNavigation';
 import { PRIMARY_DATA_KEYS, hasDatedRecords } from '../utils/datasets';
+
+const DEFAULT_BACKGROUND_GALLERY = 'horizons';
 
 export default function OuraDashboard() {
   const { showToast } = useToast();
@@ -38,6 +41,7 @@ export default function OuraDashboard() {
   const [activityDetailTarget, setActivityDetailTarget] = useState(null);
   const [isCardioDetailOpen, setIsCardioDetailOpen] = useState(false);
   const [isBiometricsDetailOpen, setIsBiometricsDetailOpen] = useState(false);
+  const [biometricsMetricTarget, setBiometricsMetricTarget] = useState(null);
   const [isWearCoverageOpen, setIsWearCoverageOpen] = useState(false);
   const [areWidgetsHidden, setAreWidgetsHidden] = useState(false);
   const {
@@ -51,30 +55,39 @@ export default function OuraDashboard() {
   } = useDateNavigation(availableDates);
 
   // Background state
-  const [backgroundMode, setBackgroundMode] = useState('particles');
+  const [backgroundMode, setBackgroundMode] = useState('horizon');
+  const [backgroundGallery] = useState(DEFAULT_BACKGROUND_GALLERY);
   const [imageList, setImageList] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSidebarCollapsed] = useState(true); // always collapsed, no toggle
+
+  useEffect(() => {
+    document.body.dataset.backgroundMode = backgroundMode;
+    return () => {
+      delete document.body.dataset.backgroundMode;
+    };
+  }, [backgroundMode]);
 
   // Load gallery manifest
   useEffect(() => {
     const loadManifest = async () => {
       try {
         const base = import.meta.env.BASE_URL || '/';
-        const res = await fetch(`${base}data/images/image_gallery/travel_destinations/gallery-manifest.json`);
+        const res = await fetch(`${base}data/images/image_gallery/${backgroundGallery}/gallery-manifest.json`);
         if (!res.ok) throw new Error('Manifest not found');
         const data = await res.json();
-        setImageList(data);
+        setImageList([...data].sort((a, b) => (a.id ?? 0) - (b.id ?? 0)));
+        setCurrentImageIndex(0);
       } catch (error) {
         console.warn('Failed to load gallery manifest:', error);
         setImageList([]);
       }
     };
     loadManifest();
-  }, []);
+  }, [backgroundGallery]);
 
   const toggleBackground = useCallback(() => {
-    setBackgroundMode(prev => (prev === 'particles' ? 'image' : 'particles'));
+    setBackgroundMode(prev => (prev === 'horizon' ? 'particles' : 'horizon'));
   }, []);
 
   const nextImage = useCallback(() => {
@@ -119,6 +132,7 @@ export default function OuraDashboard() {
     setActivityDetailTarget(null);
     setIsCardioDetailOpen(false);
     setIsBiometricsDetailOpen(false);
+    setBiometricsMetricTarget(null);
     setIsWearCoverageOpen(false);
     setAreWidgetsHidden(false);
     setAppData({});
@@ -164,6 +178,7 @@ export default function OuraDashboard() {
     <div className="relative min-h-screen">
       <BackgroundManager
         mode={backgroundMode}
+        gallery={backgroundGallery}
         imageList={imageList}
         currentIndex={currentImageIndex}
         isSidebarCollapsed={isSidebarCollapsed}
@@ -257,6 +272,7 @@ export default function OuraDashboard() {
                 heartrateData={heartrateData}
                 temperatureData={temperatureData}
                 onOpenDetails={() => setIsBiometricsDetailOpen(true)}
+                onOpenMetric={setBiometricsMetricTarget}
               />
             </section>
           </div>
@@ -307,6 +323,14 @@ export default function OuraDashboard() {
               appData={appData}
               selectedDate={selectedDate}
               onClose={() => setIsBiometricsDetailOpen(false)}
+            />
+          )}
+          {biometricsMetricTarget && (
+            <MetricDrilldownModal
+              appData={appData}
+              metricKey={biometricsMetricTarget}
+              initialDate={selectedDate}
+              onClose={() => setBiometricsMetricTarget(null)}
             />
           )}
           {isWearCoverageOpen && (

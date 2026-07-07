@@ -43,7 +43,7 @@ const LINKS = Object.freeze({
   ]),
 });
 
-function ActivityInfoContent({ topic, onClose }) {
+function ActivityInfoContent({ topic, onClose, onBack = onClose }) {
   const content = CONTENT[topic] || CONTENT.movement;
   const links = LINKS[topic] || LINKS.movement;
   useEffect(() => {
@@ -61,7 +61,7 @@ function ActivityInfoContent({ topic, onClose }) {
     <motion.div className="fixed inset-0 z-[240] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-md" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose} data-activity-info-dialog="true">
       <motion.div role="dialog" aria-modal="true" aria-label={content.title} className="w-full max-w-xl rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl sm:p-8" initial={{ opacity: 0, scale: 0.97, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 10 }} onMouseDown={event => event.stopPropagation()}>
         <header className="flex items-start justify-between gap-4">
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Activity details"><ChevronLeft className="h-6 w-6" /></button>
+          <button type="button" onClick={onBack} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Activity details"><ChevronLeft className="h-6 w-6" /></button>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">{content.eyebrow}</p>
             <h2 className="mt-2 font-outfit text-2xl font-semibold text-slate-100">{content.title}</h2>

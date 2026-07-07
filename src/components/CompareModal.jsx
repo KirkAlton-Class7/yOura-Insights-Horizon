@@ -6,7 +6,11 @@ import ComparePanel from './ComparePanel';
 export default function CompareModal({ appData, availableDates, initialDate, onClose }) {
   useEffect(() => {
     const closeOnEscape = (event) => {
-      if (event.key === 'Escape' && !document.querySelector('[data-calendar-dialog="true"]')) onClose();
+      if (
+        event.key === 'Escape'
+        && !document.querySelector('[data-calendar-dialog="true"]')
+        && !document.querySelector('[data-compare-contributors-dialog="true"]')
+      ) onClose();
     };
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
@@ -27,14 +31,14 @@ export default function CompareModal({ appData, availableDates, initialDate, onC
         role="dialog"
         aria-modal="true"
         aria-label="Compare dashboard dates"
-        className="max-h-[94vh] w-full max-w-7xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950/95 shadow-2xl shadow-black/60"
+        className="flex h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950/95 shadow-2xl shadow-black/60"
         initial={{ opacity: 0, scale: 0.98, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.98, y: 12 }}
         transition={{ duration: 0.18 }}
         onMouseDown={event => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-5 py-4 backdrop-blur-xl sm:px-7">
+        <header className="z-30 flex flex-shrink-0 items-center justify-between border-b border-white/10 bg-slate-950 px-5 py-4 backdrop-blur-xl sm:px-7">
           <div>
             <h2 className="font-outfit text-xl font-semibold text-slate-100">Compare</h2>
             <p className="text-xs text-slate-500">Readiness, Sleep, and Activity</p>
@@ -47,21 +51,25 @@ export default function CompareModal({ appData, availableDates, initialDate, onC
           >
             <X className="h-5 w-5" />
           </button>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <ComparePanel
+            appData={appData}
+            availableDates={availableDates}
+            initialDate={initialDate}
+          />
         </div>
 
-        <ComparePanel
-          appData={appData}
-          availableDates={availableDates}
-          initialDate={initialDate}
-        />
+        <div className="mx-5 flex-shrink-0 border-t border-white/15 sm:mx-7" />
 
-        <div className="mx-5 border-t border-white/15 sm:mx-7" />
-
-        <ComparePanel
-          appData={appData}
-          availableDates={availableDates}
-          initialDate={secondDate}
-        />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <ComparePanel
+            appData={appData}
+            availableDates={availableDates}
+            initialDate={secondDate}
+          />
+        </div>
       </motion.div>
     </motion.div>
   );

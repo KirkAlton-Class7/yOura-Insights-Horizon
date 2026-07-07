@@ -16,6 +16,7 @@ export default function DateNav({
   canPrevious,
   canNext,
   calendarScope = 'viewport',
+  calendarPortalElement = null,
 }) {
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
 
@@ -85,6 +86,7 @@ export default function DateNav({
           selectedDate={selectedDate}
           onSelect={onSelect}
           calendarScope={calendarScope}
+          portalElement={calendarPortalElement}
           buttonClassName={controlClass}
         />
       </div>

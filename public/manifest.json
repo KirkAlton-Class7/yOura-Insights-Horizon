@@ -1,7 +1,7 @@
 {
-  "name": "yOura Insights Dashboard",
-  "short_name": "yOura Insights",
-  "description": "yOura Insights — Personal Oura Ring health dashboard. View your readiness, sleep, activity, stress, and more.",
+  "name": "yOura Insights Horizon",
+  "short_name": "yOura Horizon",
+  "description": "yOura Insights Horizon — Personal Oura Ring health dashboard. View your readiness, sleep, activity, stress, and more.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

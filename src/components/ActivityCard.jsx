@@ -27,13 +27,13 @@ function MetricWidget({ label, value, unit, onOpen }) {
     <button
       type="button"
       onClick={onOpen}
-      className="relative z-20 rounded-xl border border-white/10 bg-slate-900/55 p-3 text-left transition-colors hover:border-cyan-300/35 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+      className="relative z-20 rounded-xl bg-white/5 p-4 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
       aria-label={`Open ${label} trends`}
     >
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-1 font-outfit text-lg font-semibold tabular-nums text-slate-100">
-        {value}{value !== '--' && unit ? <span className="ml-1 text-xs text-slate-400">{unit}</span> : null}
-      </div>
+      <p className="text-xs uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="mt-2 font-outfit text-xl font-semibold tabular-nums text-slate-100">
+        {value}{value !== '--' && unit ? <span className="ml-1 text-sm text-slate-400">{unit}</span> : null}
+      </p>
     </button>
   );
 }

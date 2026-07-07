@@ -47,7 +47,10 @@ function CalendarDate({
   );
 }
 
-function CalendarLayer({ scope, children }) {
+function CalendarLayer({ scope, children, portalElement }) {
+  if (scope === 'panel' && portalElement && typeof document !== 'undefined') {
+    return createPortal(children, portalElement);
+  }
   if (scope !== 'panel' && typeof document !== 'undefined') {
     return createPortal(children, document.body);
   }
@@ -59,6 +62,7 @@ export default function CalendarPicker({
   selectedDate,
   onSelect,
   calendarScope = 'viewport',
+  portalElement = null,
   buttonClassName,
   buttonLabel = 'Open calendar',
 }) {
@@ -130,7 +134,7 @@ export default function CalendarPicker({
         <Calendar className="mx-auto h-5 w-5" />
       </motion.button>
 
-      <CalendarLayer scope={calendarScope}>
+      <CalendarLayer scope={calendarScope} portalElement={portalElement}>
         <AnimatePresence>
           {isCalendarOpen && (
             <motion.div

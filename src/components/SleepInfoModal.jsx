@@ -64,7 +64,7 @@ const CONTENT = Object.freeze({
   }),
 });
 
-function SleepInfoContent({ topic, onClose }) {
+function SleepInfoContent({ topic, onClose, onBack = onClose }) {
   const content = CONTENT[topic] || CONTENT.debt;
   useEffect(() => {
     const closeOnEscape = event => {
@@ -95,7 +95,7 @@ function SleepInfoContent({ topic, onClose }) {
         onMouseDown={event => event.stopPropagation()}
       >
         <header className="flex items-start justify-between gap-4">
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Sleep details"><ChevronLeft className="h-6 w-6" /></button>
+          <button type="button" onClick={onBack} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Back to Sleep details"><ChevronLeft className="h-6 w-6" /></button>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">{content.eyebrow}</p>
             <h2 className="mt-2 font-outfit text-2xl font-semibold text-slate-100">{content.title}</h2>

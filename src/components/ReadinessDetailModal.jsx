@@ -32,7 +32,9 @@ const CONTRIBUTOR_DEFINITIONS = Object.freeze([
 
 const displayNumber = (value, decimals = 0) => {
   const number = Number(value);
-  return Number.isFinite(number) ? number.toFixed(decimals) : '--';
+  return Number.isFinite(number)
+    ? number.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+    : '--';
 };
 
 function ReadinessHistory({

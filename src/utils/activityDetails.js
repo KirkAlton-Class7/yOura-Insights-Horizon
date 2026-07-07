@@ -35,10 +35,10 @@ export const getActivityTimeSeconds = record => (
 );
 
 export const ACTIVITY_INTENSITY_LEVELS = Object.freeze([
-  Object.freeze({ key: 'vigorous', label: 'Vigorous', source: 'high_activity_time', color: '#f43f5e' }),
-  Object.freeze({ key: 'moderate', label: 'Moderate', source: 'medium_activity_time', color: '#f59e0b' }),
-  Object.freeze({ key: 'light', label: 'Light', source: 'low_activity_time', color: '#06b6d4' }),
   Object.freeze({ key: 'sedentary', label: 'Sedentary', source: 'sedentary_time', color: '#64748b' }),
+  Object.freeze({ key: 'light', label: 'Light', source: 'low_activity_time', color: '#06b6d4' }),
+  Object.freeze({ key: 'moderate', label: 'Moderate', source: 'medium_activity_time', color: '#f59e0b' }),
+  Object.freeze({ key: 'vigorous', label: 'Vigorous', source: 'high_activity_time', color: '#f43f5e' }),
 ]);
 
 export const getActivityIntensityDurations = record => Object.freeze(

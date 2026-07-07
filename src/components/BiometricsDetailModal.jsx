@@ -10,10 +10,13 @@ import { getBiometricsHistory } from '../utils/biometricsDetails';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableDatesAcrossDatasets, getAvailableRecordDates } from '../utils/dataAvailability';
 import { getBloodOxygenColor, SEMANTIC_COLORS } from '../utils/colors';
+import { avoidCircleLabelCollision } from '../utils/chartGeometry';
 
 const displayNumber = (value, decimals = 0) => {
   const number = Number(value);
-  return Number.isFinite(number) ? number.toFixed(decimals) : '--';
+  return Number.isFinite(number)
+    ? number.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+    : '--';
 };
 
 function KeyMetric({ label, value, unit, onOpen }) {
@@ -47,7 +50,8 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
   const width = 1100;
   const height = 340;
   const baseline = 252;
-  const top = 68;
+  const circleTop = 86;
+  const circleBottom = 176;
   const slotWidth = width / history.length;
   const oxygenValues = history.map(day => day.bloodOxygen).filter(value => value !== null);
   const disturbanceValues = history.map(day => day.breathingDisturbance).filter(value => value !== null);
@@ -56,14 +60,27 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
   const oxygenRange = Math.max(2, oxygenMaximum - oxygenMinimum);
   const disturbanceMaximum = Math.max(3, ...(disturbanceValues.length ? disturbanceValues : [0]));
   const barHeightFor = value => value === null ? 5 : 36 + ((value - oxygenMinimum) / oxygenRange) * 116;
-  const disturbanceYFor = value => top + (value / disturbanceMaximum) * 100;
+  const disturbanceYFor = value => circleTop + (Math.min(Math.max(value, 0), disturbanceMaximum) / disturbanceMaximum) * (circleBottom - circleTop);
   const selected = calendarDates.getDatePresentation(selectedDate);
   const swipe = useSwipePaging({ canPrevious, canNext, onPrevious, onNext });
 
   const linePoints = history
-    .map((day, index) => day.breathingDisturbance === null ? null : `${slotWidth * index + slotWidth / 2},${disturbanceYFor(day.breathingDisturbance)}`)
-    .filter(Boolean)
-    .join(' ');
+    .map((day, index) => day.breathingDisturbance === null ? null : ({
+      x: slotWidth * index + slotWidth / 2,
+      y: disturbanceYFor(day.breathingDisturbance),
+    }))
+    .filter(Boolean);
+
+  const smoothPath = points => {
+    if (!points.length) return '';
+    if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+    return points.reduce((path, point, index) => {
+      if (index === 0) return `M ${point.x} ${point.y}`;
+      const previous = points[index - 1];
+      const midpointX = (previous.x + point.x) / 2;
+      return `${path} C ${midpointX} ${previous.y}, ${midpointX} ${point.y}, ${point.x} ${point.y}`;
+    }, '');
+  };
 
   return (
     <section className="rounded-2xl border border-white/10 bg-slate-950/35 p-4 sm:p-6">
@@ -82,6 +99,12 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
               const barWidth = slotWidth * 0.64;
               const barHeight = barHeightFor(day.bloodOxygen);
               const centerX = slotWidth * index + slotWidth / 2;
+              const circleY = day.breathingDisturbance === null ? null : disturbanceYFor(day.breathingDisturbance);
+              const oxygenLabelY = avoidCircleLabelCollision(
+                baseline - barHeight - 10,
+                circleY,
+                { minimum: 28, maximum: baseline - 14 },
+              );
               const date = calendarDates.getDatePresentation(day.date);
               const active = day.date === selectedDate;
               const available = day.bloodOxygen !== null || day.breathingDisturbance !== null;
@@ -118,7 +141,7 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
                     strokeWidth="3"
                   />
                   {day.bloodOxygen !== null && (
-                    <text x={centerX} y={baseline - barHeight - 10} textAnchor="middle" fill="rgba(226,232,240,0.9)" fontSize="17" fontWeight="700">
+                    <text x={centerX} y={oxygenLabelY} textAnchor="middle" fill="rgba(226,232,240,0.9)" fontSize="17" fontWeight="700">
                       {day.bloodOxygen.toFixed(1)}
                     </text>
                   )}
@@ -127,7 +150,7 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
                 </g>
               );
             })}
-            {linePoints && <polyline points={linePoints} fill="none" stroke="rgba(226,232,240,0.58)" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" pointerEvents="none" />}
+            {linePoints.length > 1 && <path d={smoothPath(linePoints)} fill="none" stroke="rgba(226,232,240,0.58)" strokeWidth="4" strokeDasharray="9 8" strokeLinejoin="round" strokeLinecap="round" pointerEvents="none" />}
             {history.map((day, index) => day.breathingDisturbance === null ? null : (
               <g key={`${day.date}-disturbance`} pointerEvents="none">
                 <circle cx={slotWidth * index + slotWidth / 2} cy={disturbanceYFor(day.breathingDisturbance)} r="16" fill="#e2e8f0" stroke={day.date === selectedDate ? '#67e8f9' : '#cbd5e1'} strokeWidth="4" />

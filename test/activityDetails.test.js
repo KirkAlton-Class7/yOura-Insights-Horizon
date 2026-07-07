@@ -23,7 +23,7 @@ test('goal progress compares active calories with the exported target', () => {
   assert.equal(getGoalProgress({ active_calories: 450 }), null);
 });
 
-test('activity intensity preserves exported vigorous, moderate, light, and sedentary durations', () => {
+test('activity intensity presents sedentary, light, moderate, and vigorous durations', () => {
   const durations = getActivityIntensityDurations({
     high_activity_time: 900,
     medium_activity_time: 1800,
@@ -31,10 +31,10 @@ test('activity intensity preserves exported vigorous, moderate, light, and seden
     sedentary_time: 7200,
   });
   assert.deepEqual(durations.map(item => [item.key, item.seconds]), [
-    ['vigorous', 900],
-    ['moderate', 1800],
-    ['light', 3600],
     ['sedentary', 7200],
+    ['light', 3600],
+    ['moderate', 1800],
+    ['vigorous', 900],
   ]);
 });
 

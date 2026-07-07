@@ -6,6 +6,7 @@ import MetricDrilldownModal from './MetricDrilldownModal';
 import SleepDebtDetailModal from './SleepDebtDetailModal';
 import SleepInfoModal from './SleepInfoModal';
 import SleepRegularityDetailModal from './SleepRegularityDetailModal';
+import SleepStageBars from './SleepStageBars';
 import SleepStageTimeline from './SleepStageTimeline';
 import SleepStagesTrendModal from './SleepStagesTrendModal';
 import SubScoreBar from './SubScoreBar';
@@ -13,7 +14,6 @@ import UnavailableState from './UnavailableState';
 import { getScoreColor, SEMANTIC_COLORS } from '../utils/colors';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableDatesAcrossDatasets } from '../utils/dataAvailability';
-import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
 import { getLongSleepRecord } from '../utils/readinessDetails';
 import {
   SLEEP_DEBT_CATEGORIES,
@@ -43,7 +43,9 @@ const CONTRIBUTOR_DEFINITIONS = Object.freeze([
 const displayNumber = (value, decimals = 0) => {
   if (value === '' || value === null || value === undefined) return '--';
   const number = Number(value);
-  return Number.isFinite(number) ? number.toFixed(decimals) : '--';
+  return Number.isFinite(number)
+    ? number.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+    : '--';
 };
 
 function StaticMetric({ label, value, unit, onOpen }) {
@@ -159,7 +161,7 @@ function SleepStagesChart({ sleepModel, summary, onOpen }) {
     <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/55 transition-colors hover:border-cyan-300/35">
       <button type="button" onClick={onOpen} className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300" aria-label="Open Time Asleep trends" />
       <div className="p-5 sm:p-6">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Time Asleep</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Sleep Stages</h3>
         <div className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-1">
           <span className="font-outfit text-4xl font-light tabular-nums text-slate-100">
             {formatSleepDuration(summary.totalSleep)}
@@ -183,28 +185,16 @@ function SleepStagesChart({ sleepModel, summary, onOpen }) {
       )}
 
       <div className="border-t border-white/10 p-5 sm:p-6">
+        <SleepStageBars stages={summary.stages} />
+      </div>
+
+      <div className="border-t border-white/10 p-5 sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Movement</p>
         <p className="mt-2 text-sm text-slate-300">
           {summary.restlessPeriods === null
             ? 'Movement detail was not included in this export.'
             : `${Math.round(summary.restlessPeriods)} restless ${Math.round(summary.restlessPeriods) === 1 ? 'period' : 'periods'} recorded.`}
         </p>
-        <div className="mt-5 space-y-3">
-          {summary.stages.map(stage => (
-            <div key={stage.key} className="grid grid-cols-[5rem_1fr_auto] items-center gap-3 text-sm">
-              <span className="text-slate-300">{stage.label}</span>
-              <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${Math.min(100, stage.percentage)}%`, backgroundColor: SLEEP_STAGE_COLORS[stage.key] }}
-                />
-              </div>
-              <span className="min-w-[7rem] text-right tabular-nums text-slate-300">
-                {formatSleepDuration(stage.seconds)} · {Math.round(stage.percentage)}%
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
