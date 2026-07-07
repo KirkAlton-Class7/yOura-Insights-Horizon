@@ -24,7 +24,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -35,6 +35,13 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Validate Pages artifact
+        run: |
+          test -f dist/index.html
+          test -f dist/CNAME
+          test -n "$(find dist/assets -name '*.js' -print -quit)"
+          ! grep -q '/src/main.jsx' dist/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
