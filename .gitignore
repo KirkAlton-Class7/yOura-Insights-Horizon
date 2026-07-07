@@ -44,7 +44,6 @@ Secrets
 # Packages & Archives
 # ───────────────────────────────
 
-node_modules/
 *.zip
 *.rpm
 rpm_packages/
