@@ -1,8 +1,0 @@
-DailySleepKey;ParticipantID;ParticipantIdentifier;InsertedDate;ID;score;contributors;day;timestamp
-abc-123_s1;abc-123;user-1;2025-06-27T10:00:00Z;s1;82;{"deep_sleep":80,"rem_sleep":75,"total_sleep":85,"efficiency":90,"restfulness":80,"latency":70,"timing":75};2025-06-20;2025-06-20T04:00:00-04:00
-abc-123_s2;abc-123;user-1;2025-06-27T10:00:00Z;s2;88;{"deep_sleep":85,"rem_sleep":80,"total_sleep":90,"efficiency":92,"restfulness":85,"latency":75,"timing":80};2025-06-21;2025-06-21T04:00:00-04:00
-abc-123_s3;abc-123;user-1;2025-06-27T10:00:00Z;s3;70;{"deep_sleep":65,"rem_sleep":60,"total_sleep":75,"efficiency":80,"restfulness":70,"latency":60,"timing":65};2025-06-22;2025-06-22T04:00:00-04:00
-abc-123_s4;abc-123;user-1;2025-06-27T10:00:00Z;s4;92;{"deep_sleep":90,"rem_sleep":85,"total_sleep":95,"efficiency":96,"restfulness":90,"latency":80,"timing":85};2025-06-23;2025-06-23T04:00:00-04:00
-abc-123_s5;abc-123;user-1;2025-06-27T10:00:00Z;s5;65;{"deep_sleep":55,"rem_sleep":50,"total_sleep":65,"efficiency":70,"restfulness":60,"latency":50,"timing":55};2025-06-24;2025-06-24T04:00:00-04:00
-abc-123_s6;abc-123;user-1;2025-06-27T10:00:00Z;s6;86;{"deep_sleep":82,"rem_sleep":78,"total_sleep":88,"efficiency":90,"restfulness":82,"latency":72,"timing":78};2025-06-25;2025-06-25T04:00:00-04:00
-abc-123_s7;abc-123;user-1;2025-06-27T10:00:00Z;s7;78;{"deep_sleep":72,"rem_sleep":68,"total_sleep":80,"efficiency":84,"restfulness":74,"latency":64,"timing":70};2025-06-26;2025-06-26T04:00:00-04:00

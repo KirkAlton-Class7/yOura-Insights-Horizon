@@ -58,6 +58,7 @@ export default function ComparePanel({ appData, availableDates, initialDate }) {
             selectedDate={selectedDate}
             onClose={() => setContributorsCategory(null)}
             constrained
+            portalElement={panelElement}
           />
         )}
       </AnimatePresence>

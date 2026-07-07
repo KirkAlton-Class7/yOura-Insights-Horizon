@@ -1,8 +1,0 @@
-DailyResilienceKey;ParticipantID;ParticipantIdentifier;InsertedDate;ID;level;contributors;day;timestamp
-dr1;abc-123;user-1;2025-06-27T10:00:00Z;dr1;strong;{"daytime_recovery":80,"sleep_recovery":85,"stress":75};2025-06-20;2025-06-20T04:00:00-04:00
-dr2;abc-123;user-1;2025-06-27T10:00:00Z;dr2;exceptional;{"daytime_recovery":90,"sleep_recovery":95,"stress":85};2025-06-21;2025-06-21T04:00:00-04:00
-dr3;abc-123;user-1;2025-06-27T10:00:00Z;dr3;adequate;{"daytime_recovery":60,"sleep_recovery":65,"stress":55};2025-06-22;2025-06-22T04:00:00-04:00
-dr4;abc-123;user-1;2025-06-27T10:00:00Z;dr4;exceptional;{"daytime_recovery":95,"sleep_recovery":98,"stress":88};2025-06-23;2025-06-23T04:00:00-04:00
-dr5;abc-123;user-1;2025-06-27T10:00:00Z;dr5;limited;{"daytime_recovery":45,"sleep_recovery":50,"stress":40};2025-06-24;2025-06-24T04:00:00-04:00
-dr6;abc-123;user-1;2025-06-27T10:00:00Z;dr6;strong;{"daytime_recovery":82,"sleep_recovery":88,"stress":78};2025-06-25;2025-06-25T04:00:00-04:00
-dr7;abc-123;user-1;2025-06-27T10:00:00Z;dr7;solid;{"daytime_recovery":70,"sleep_recovery":75,"stress":65};2025-06-26;2025-06-26T04:00:00-04:00

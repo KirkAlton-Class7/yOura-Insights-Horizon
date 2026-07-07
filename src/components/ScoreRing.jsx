@@ -1,6 +1,6 @@
 import { getScoreColor, getScoreStatus } from '../utils/colors';
 
-export default function ScoreRing({ score, size = 140 }) {
+export default function ScoreRing({ score, size = 140, scoreFontSize, statusFontSize = 11 }) {
   const cx = size / 2;
   const cy = size / 2;
   const r = size / 2 - 13;
@@ -23,12 +23,12 @@ export default function ScoreRing({ score, size = 140 }) {
         style={{ transition: 'stroke-dashoffset 0.7s cubic-bezier(.23,1,.32,1)' }}
       />
       <text x={cx} y={cy - 6} textAnchor="middle" fill="white"
-        fontSize={display === '--' ? 22 : 30} fontWeight="800" fontFamily="Outfit, ui-sans-serif, system-ui, sans-serif"
+        fontSize={scoreFontSize || (display === '--' ? 22 : 30)} fontWeight="800" fontFamily="Outfit, ui-sans-serif, system-ui, sans-serif"
         style={{ fontVariantNumeric: 'tabular-nums' }} dominantBaseline="auto">
         {display}
       </text>
       <text x={cx} y={cy + 16} textAnchor="middle" fill="rgba(255,255,255,0.45)"
-        fontSize="11" fontFamily="DM Sans, ui-sans-serif, system-ui, sans-serif" dominantBaseline="auto">
+        fontSize={statusFontSize} fontFamily="DM Sans, ui-sans-serif, system-ui, sans-serif" dominantBaseline="auto">
         {getScoreStatus(hasScore ? score : null)}
       </text>
     </svg>

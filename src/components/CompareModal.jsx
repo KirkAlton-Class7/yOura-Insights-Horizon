@@ -10,6 +10,7 @@ export default function CompareModal({ appData, availableDates, initialDate, onC
         event.key === 'Escape'
         && !document.querySelector('[data-calendar-dialog="true"]')
         && !document.querySelector('[data-compare-contributors-dialog="true"]')
+        && !document.querySelector('[data-metric-drilldown="true"]')
       ) onClose();
     };
     document.addEventListener('keydown', closeOnEscape);

@@ -1,8 +1,0 @@
-SleepTimeKey;ParticipantID;ParticipantIdentifier;InsertedDate;ID;optimal_bedtime;day;timestamp
-st1;abc-123;user-1;2025-06-27T10:00:00Z;st1;{"day_tz":-14400,"start_offset":28800,"end_offset":32400};2025-06-20;2025-06-20T04:00:00-04:00
-st2;abc-123;user-1;2025-06-27T10:00:00Z;st2;{"day_tz":-14400,"start_offset":28200,"end_offset":31800};2025-06-21;2025-06-21T04:00:00-04:00
-st3;abc-123;user-1;2025-06-27T10:00:00Z;st3;{"day_tz":-14400,"start_offset":30000,"end_offset":33600};2025-06-22;2025-06-22T04:00:00-04:00
-st4;abc-123;user-1;2025-06-27T10:00:00Z;st4;{"day_tz":-14400,"start_offset":27600,"end_offset":31200};2025-06-23;2025-06-23T04:00:00-04:00
-st5;abc-123;user-1;2025-06-27T10:00:00Z;st5;{"day_tz":-14400,"start_offset":30600,"end_offset":34200};2025-06-24;2025-06-24T04:00:00-04:00
-st6;abc-123;user-1;2025-06-27T10:00:00Z;st6;{"day_tz":-14400,"start_offset":28800,"end_offset":32400};2025-06-25;2025-06-25T04:00:00-04:00
-st7;abc-123;user-1;2025-06-27T10:00:00Z;st7;{"day_tz":-14400,"start_offset":29400,"end_offset":33000};2025-06-26;2025-06-26T04:00:00-04:00

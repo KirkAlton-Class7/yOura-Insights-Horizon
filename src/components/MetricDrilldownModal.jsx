@@ -218,7 +218,15 @@ function TrendChart({ series, selectedKey, onSelect }) {
   );
 }
 
-function MetricDrilldownContent({ appData, metricKey, initialDate, onClose, onBack = onClose }) {
+function MetricDrilldownContent({
+  appData,
+  metricKey,
+  initialDate,
+  onClose,
+  onBack = onClose,
+  constrained = false,
+  portalElement = null,
+}) {
   const { showToast } = useToast();
   const [mode, setMode] = useState('day');
   const [anchorDate, setAnchorDate] = useState(initialDate);
@@ -308,20 +316,32 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose, onBa
     setRangeDrafts(current => ({ ...current, [mode]: String(value) }));
   };
 
+  const overlayClass = constrained
+    ? 'absolute inset-0 z-[180] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-md'
+    : 'fixed inset-0 z-[180] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6';
+  const dialogClass = constrained
+    ? 'max-h-[calc(100%-2rem)] w-[min(46rem,calc(100%-2rem))] overflow-y-auto rounded-2xl border border-white/10 bg-slate-950 shadow-2xl shadow-black/70'
+    : 'max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-black/70';
+  const contentClass = constrained ? 'space-y-5 p-4' : 'space-y-7 p-4 sm:p-7';
+  const modeButtonClass = constrained ? 'px-3 py-2.5 text-base' : 'px-3 py-3 text-base sm:text-lg';
+
   return (
     <motion.div
-      className="fixed inset-0 z-[180] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-lg sm:p-6"
+      className={overlayClass}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onMouseDown={onClose}
+      onMouseDown={event => {
+        event.stopPropagation();
+        onClose();
+      }}
       data-metric-drilldown="true"
     >
       <motion.div
         role="dialog"
         aria-modal="true"
         aria-label={`${series.metric.title} trends`}
-        className="max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-black/70"
+        className={dialogClass}
         initial={{ opacity: 0, scale: 0.98, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.98, y: 12 }}
@@ -343,7 +363,8 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose, onBa
               availableDates={availableDates}
               selectedDate={anchorDate}
               onSelect={selectCalendarDate}
-              calendarScope="nested"
+              calendarScope={constrained ? 'panel-nested' : 'nested'}
+              portalElement={constrained ? portalElement : null}
               buttonClassName="rounded-xl p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-slate-100"
               buttonLabel={`Choose ${series.metric.title} date`}
             />
@@ -358,14 +379,14 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose, onBa
           </div>
         </header>
 
-        <div className="space-y-7 p-4 sm:p-7">
+        <div className={contentClass}>
           <div className="grid grid-cols-3 rounded-2xl bg-slate-900/80 p-1">
             {MODES.map(([key, label]) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => selectMode(key)}
-                className={`rounded-xl px-3 py-3 font-outfit text-base font-semibold transition-colors sm:text-lg ${
+                className={`rounded-xl font-outfit font-semibold transition-colors ${modeButtonClass} ${
                   mode === key
                     ? 'bg-slate-600 text-white shadow-sm'
                     : 'text-cyan-300 hover:bg-white/5'
@@ -457,5 +478,6 @@ function MetricDrilldownContent({ appData, metricKey, initialDate, onClose, onBa
 
 export default function MetricDrilldownModal(props) {
   if (typeof document === 'undefined') return null;
-  return createPortal(<MetricDrilldownContent {...props} />, document.body);
+  const target = props.portalElement || document.body;
+  return createPortal(<MetricDrilldownContent {...props} />, target);
 }

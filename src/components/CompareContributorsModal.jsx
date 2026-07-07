@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
+import MetricDrilldownModal from './MetricDrilldownModal';
 import ScoreRing from './ScoreRing';
 import SubScoreBar from './SubScoreBar';
 import UnavailableState from './UnavailableState';
@@ -8,31 +9,32 @@ import { calendarDates } from '../utils/dateService';
 
 const CONTRIBUTOR_DEFINITIONS = Object.freeze({
   readiness: Object.freeze([
-    ['activity_balance', 'Activity Balance'],
-    ['body_temperature', 'Body Temperature'],
-    ['hrv_balance', 'HRV Balance'],
-    ['previous_day_activity', 'Previous Day Activity'],
-    ['previous_night', 'Previous Night'],
-    ['recovery_index', 'Recovery Index'],
-    ['resting_heart_rate', 'Resting Heart Rate'],
-    ['sleep_balance', 'Sleep Balance'],
+    ['activity_balance', 'Activity Balance', 'readinessActivityBalanceContributor'],
+    ['body_temperature', 'Body Temperature', 'readinessBodyTemperatureContributor'],
+    ['hrv_balance', 'HRV Balance', 'readinessHrvBalanceContributor'],
+    ['previous_day_activity', 'Previous Day Activity', 'readinessPreviousDayActivityContributor'],
+    ['previous_night', 'Previous Night', 'readinessPreviousNightContributor'],
+    ['recovery_index', 'Recovery Index', 'readinessRecoveryIndexContributor'],
+    ['resting_heart_rate', 'Resting Heart Rate', 'readinessRestingHeartRateContributor'],
+    ['sleep_balance', 'Sleep Balance', 'readinessSleepBalanceContributor'],
+    ['sleep_regularity', 'Sleep Regularity', 'readinessSleepRegularityContributor'],
   ]),
   sleep: Object.freeze([
-    ['deep_sleep', 'Deep Sleep'],
-    ['rem_sleep', 'REM Sleep'],
-    ['total_sleep', 'Total Sleep'],
-    ['efficiency', 'Efficiency'],
-    ['restfulness', 'Restfulness'],
-    ['latency', 'Latency'],
-    ['timing', 'Timing'],
+    ['deep_sleep', 'Deep Sleep', 'deepSleepContributor'],
+    ['rem_sleep', 'REM Sleep', 'remSleepContributor'],
+    ['total_sleep', 'Total Sleep', 'totalSleepContributor'],
+    ['efficiency', 'Efficiency', 'efficiencyContributor'],
+    ['restfulness', 'Restfulness', 'restfulnessContributor'],
+    ['latency', 'Latency', 'latencyContributor'],
+    ['timing', 'Timing', 'timingContributor'],
   ]),
   activity: Object.freeze([
-    ['meet_daily_targets', 'Meet Daily Targets'],
-    ['move_every_hour', 'Move Every Hour'],
-    ['recovery_time', 'Recovery Time'],
-    ['stay_active', 'Stay Active'],
-    ['training_frequency', 'Training Frequency'],
-    ['training_volume', 'Training Volume'],
+    ['meet_daily_targets', 'Meet Daily Targets', 'meetDailyTargetsContributor'],
+    ['move_every_hour', 'Move Every Hour', 'moveEveryHourContributor'],
+    ['recovery_time', 'Recovery Time', 'recoveryTimeContributor'],
+    ['stay_active', 'Stay Active', 'stayActiveContributor'],
+    ['training_frequency', 'Training Frequency', 'trainingFrequencyContributor'],
+    ['training_volume', 'Training Volume', 'trainingVolumeContributor'],
   ]),
 });
 
@@ -42,7 +44,15 @@ const TITLES = Object.freeze({
   activity: 'Activity',
 });
 
-export default function CompareContributorsModal({ appData, category, selectedDate, onClose, constrained = false }) {
+export default function CompareContributorsModal({
+  appData,
+  category,
+  selectedDate,
+  onClose,
+  constrained = false,
+  portalElement = null,
+}) {
+  const [drillMetric, setDrillMetric] = useState(null);
   const record = appData[category]?.[selectedDate]?.[0] || null;
   const contributors = record?.contributors || {};
   const title = TITLES[category] || 'Score';
@@ -66,7 +76,11 @@ export default function CompareContributorsModal({ appData, category, selectedDa
 
   useEffect(() => {
     const closeOnEscape = event => {
-      if (event.key === 'Escape') {
+      if (
+        event.key === 'Escape'
+        && !document.querySelector('[data-calendar-dialog="true"]')
+        && !document.querySelector('[data-metric-drilldown="true"]')
+      ) {
         event.stopImmediatePropagation();
         onClose();
       }
@@ -114,15 +128,25 @@ export default function CompareContributorsModal({ appData, category, selectedDa
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{title} score</p>
                 <p className={`${constrained ? 'mt-1 text-xs' : 'mt-2 text-sm'} text-slate-500`}>Detailed contributors for this comparison date</p>
               </div>
-              <ScoreRing score={record?.score ?? null} size={ringSize} />
+              <ScoreRing
+                score={record?.score ?? null}
+                size={ringSize}
+                scoreFontSize={constrained ? 24 : undefined}
+                statusFontSize={constrained ? 10 : 11}
+              />
             </div>
           </section>
 
           {record ? (
             <section className={contributorSectionClass}>
               <div className={`grid grid-cols-1 ${constrained ? 'gap-2' : 'gap-3 sm:grid-cols-2'}`}>
-                {definitions.map(([key, label]) => (
-                  <SubScoreBar key={key} label={label} value={contributors[key]} />
+                {definitions.map(([key, label, metricKey]) => (
+                  <SubScoreBar
+                    key={key}
+                    label={label}
+                    value={contributors[key]}
+                    onOpen={metricKey ? () => setDrillMetric(metricKey) : undefined}
+                  />
                 ))}
               </div>
             </section>
@@ -131,6 +155,19 @@ export default function CompareContributorsModal({ appData, category, selectedDa
           )}
         </div>
       </motion.div>
+      <AnimatePresence>
+        {drillMetric && (
+          <MetricDrilldownModal
+            appData={appData}
+            metricKey={drillMetric}
+            initialDate={selectedDate}
+            onClose={() => setDrillMetric(null)}
+            onBack={() => setDrillMetric(null)}
+            constrained={constrained}
+            portalElement={portalElement}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

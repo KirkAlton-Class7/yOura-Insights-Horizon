@@ -48,10 +48,10 @@ function CalendarDate({
 }
 
 function CalendarLayer({ scope, children, portalElement }) {
-  if (scope === 'panel' && portalElement && typeof document !== 'undefined') {
+  if ((scope === 'panel' || scope === 'panel-nested') && portalElement && typeof document !== 'undefined') {
     return createPortal(children, portalElement);
   }
-  if (scope !== 'panel' && typeof document !== 'undefined') {
+  if (scope !== 'panel' && scope !== 'panel-nested' && typeof document !== 'undefined') {
     return createPortal(children, document.body);
   }
   return children;
@@ -116,8 +116,9 @@ export default function CalendarPicker({
     ));
   };
 
-  const layerClass = calendarScope === 'panel'
-    ? 'absolute z-50 items-center rounded-3xl bg-slate-950/75 p-4 backdrop-blur-sm'
+  const isPanelCalendar = calendarScope === 'panel' || calendarScope === 'panel-nested';
+  const layerClass = isPanelCalendar
+    ? `${calendarScope === 'panel-nested' ? 'z-[260]' : 'z-50'} absolute items-center rounded-3xl bg-slate-950/75 p-4 backdrop-blur-sm`
     : `${calendarScope === 'nested' ? 'z-[240]' : 'z-[100]'} fixed items-start overflow-y-auto bg-slate-950/75 p-4 backdrop-blur-sm`;
 
   return (
@@ -142,15 +143,18 @@ export default function CalendarPicker({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onMouseDown={() => setIsCalendarOpen(false)}
+              onMouseDown={event => {
+                event.stopPropagation();
+                setIsCalendarOpen(false);
+              }}
               data-calendar-dialog="true"
             >
               <motion.div
                 role="dialog"
                 aria-modal="true"
                 aria-label="Choose an available date"
-                className={`${calendarScope === 'panel' ? 'h-[calc(100%-2rem)] max-h-[calc(100%-2rem)] rounded-3xl bg-slate-900/95' : 'my-auto max-h-[calc(100vh-2rem)] rounded-3xl bg-slate-900/95'} w-full overflow-y-auto border border-white/10 shadow-2xl shadow-black/50 ${
-                  calendarScope === 'panel'
+                className={`${isPanelCalendar ? 'h-[calc(100%-2rem)] max-h-[calc(100%-2rem)] rounded-3xl bg-slate-900/95' : 'my-auto max-h-[calc(100vh-2rem)] rounded-3xl bg-slate-900/95'} w-full overflow-y-auto border border-white/10 shadow-2xl shadow-black/50 ${
+                  isPanelCalendar
                     ? calendarView === 'month' ? 'max-w-2xl' : 'max-w-5xl'
                     : calendarView === 'month' ? 'max-w-3xl' : 'max-w-6xl'
                 }`}
