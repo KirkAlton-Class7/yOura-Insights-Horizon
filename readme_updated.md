@@ -54,7 +54,7 @@ npm run preview -- --host
 
 yOura Insights Horizon turns exported Oura CSV files into a visual health dashboard for readiness, sleep, activity, stress, resilience, cardiovascular health, biometrics, and ring wear coverage.
 
-![Dashboard scores](assets/images/scores.png)
+![Dashboard scores](assets/images/dashboard-overview-scores.png)
 
 ## Features
 
@@ -74,15 +74,15 @@ yOura Insights Horizon turns exported Oura CSV files into a visual health dashbo
 
 Cards open deeper views with contributors, key metrics, charts, trends, and nested detail modals. Many charts support day, week, and month ranges for quick trend exploration.
 
-![Readiness drilldown level one](assets/images/readiness-drilldown.png)
+![Readiness drilldown level one](assets/images/readiness-drilldown-overview.png)
 
-![Readiness drilldown level two](assets/images/readiness-drilldown-2.png)
+![Readiness drilldown level two](assets/images/readiness-metric-drilldown.png)
 
 ## Horizon Mode and Particles
 
 Use the Horizon button to switch between frosted-glass dashboard views over scenic backgrounds and the animated particle background. Horizon Mode also works as a lightweight gallery viewer with a curated set of scenic horizon images.
 
-![Particles mode](assets/images/horizon-off-particles.png)
+![Particles mode](assets/images/particles-background-mode.png)
 
 ## Hide Widgets
 
@@ -90,24 +90,24 @@ Hide Widgets keeps the header visible while fading out dashboard cards so the se
 
 | | | |
 |---|---|---|
-| ![Highway sunset horizon](assets/images/hide-widgets.png) | ![Mountain horizon](assets/images/hide-widgets-2.png) | ![Coastal horizon](assets/images/hide-widgets-3.png.png) |
-| ![Beach horizon](assets/images/hide-widgets-4.png) | ![City horizon](assets/images/hide-widgets-5.png) | ![Ocean wave horizon](assets/images/hide-widgets-6.png) |
+| ![Highway sunset horizon](assets/images/hide-widgets-highway-sunset.png) | ![Mountain horizon](assets/images/hide-widgets-mountain-horizon.png) | ![Coastal horizon](assets/images/hide-widgets-coastal-horizon.png) |
+| ![Beach horizon](assets/images/hide-widgets-beach-horizon.png) | ![City horizon](assets/images/hide-widgets-city-horizon.png) | ![Ocean wave horizon](assets/images/hide-widgets-ocean-wave-horizon.png) |
 
 ## Compare Mode
 
 Compare Mode shows two independent dashboard panels so you can compare Readiness, Sleep, and Activity between any two available dates. Each panel supports contributor drilldowns.
 
-![Compare mode](assets/images/compare-1.png)
+![Compare mode](assets/images/compare-mode-top-panel.png)
 
-![Compare mode](assets/images/compare-2.png)
+![Compare mode](assets/images/compare-mode-bottom-panel.png)
 
 ## Snapshots
 
 Create shareable snapshots from the full dashboard or from individual cards.
 
-![Card snapshot](assets/images/card-snapshot.png)
+![Card snapshot](assets/images/card-snapshot-example.png)
 
-![Snapshot file](assets/images/snapshot-file.png)
+![Snapshot file](assets/images/dashboard-snapshot-file.png)
 
 ## Mock Data
 

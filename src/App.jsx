@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import OuraDashboard from './pages/OuraDashboard';
 
 function App() {

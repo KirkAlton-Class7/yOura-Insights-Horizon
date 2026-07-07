@@ -11,6 +11,8 @@ export default function ParticlesBackground() {
     const COUNT = 150;
     const CONNECTION_DIST = 100;
     const CONNECTION_RATE = 0.465;
+    const CONNECTION_DIST_SQUARED = CONNECTION_DIST * CONNECTION_DIST;
+    let animationFrameId = null;
 
     function resize() {
       canvas.width = window.innerWidth;
@@ -58,7 +60,9 @@ export default function ParticlesBackground() {
 
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx*dx + dy*dy);
+          const distSquared = dx * dx + dy * dy;
+          if (distSquared >= CONNECTION_DIST_SQUARED) continue;
+          const dist = Math.sqrt(distSquared);
           if (dist < CONNECTION_DIST) {
             const opacity = (1 - dist / CONNECTION_DIST) * 0.2;
             ctx.beginPath();
@@ -79,14 +83,36 @@ export default function ParticlesBackground() {
         p.draw();
       }
       drawConnections();
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function start() {
+      if (animationFrameId === null) animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function stop() {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        stop();
+      } else {
+        start();
+      }
     }
 
     init();
-    animate();
+    start();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      stop();
       window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
