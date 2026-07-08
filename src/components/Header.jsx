@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Image, ImageOff, ChevronLeft, ChevronRight, Eye, EyeOff, SquareSplitHorizontal } from 'lucide-react';
 
@@ -13,15 +14,27 @@ export default function Header({
   onToggleWidgets,
 }) {
   const isHorizonMode = backgroundMode === 'horizon';
+  const scrollRef = useRef(null);
+
+  const clampHorizontalScroll = () => {
+    const element = scrollRef.current;
+    if (!element) return;
+    const maxScroll = Math.max(0, element.scrollWidth - element.clientWidth);
+    if (element.scrollLeft > maxScroll) element.scrollLeft = maxScroll;
+    if (element.scrollLeft < 0) element.scrollLeft = 0;
+  };
 
   return (
     <motion.header
+      ref={scrollRef}
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 100 }}
-      className="sticky top-0 z-30 touch-pan-x overflow-x-auto overscroll-x-contain border-b border-white/10 bg-slate-950/95 shadow-md scrollbar-hide xl:overflow-x-hidden"
+      onScroll={clampHorizontalScroll}
+      onTouchEnd={clampHorizontalScroll}
+      className="sticky top-0 z-30 max-w-full touch-pan-x overflow-x-auto overscroll-x-contain border-b border-white/10 bg-slate-950/95 shadow-md scrollbar-hide xl:overflow-x-hidden"
     >
-      <div className="relative min-w-max xl:min-w-full">
+      <div className="relative w-max min-w-full">
         <motion.div
           className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"
           animate={{ x: ['-100%', '100%'] }}
@@ -102,9 +115,11 @@ export default function Header({
               <button
                 onClick={onCompare}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:text-cyan-300 transition-all text-xs font-outfit font-medium tabular-nums"
+                title="Compare"
+                aria-label="Compare"
               >
                 <SquareSplitHorizontal className="w-4 h-4" />
-                <span>Compare</span>
+                <span className="hidden sm:inline">Compare</span>
               </button>
 
               {/* Copy Snapshot Button */}
