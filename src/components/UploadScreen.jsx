@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { motion } from 'framer-motion';
-import { Upload } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ExternalLink, FileLock, Info, Upload } from 'lucide-react';
 import { parseCSV, parseCSVLine, dateKey } from '../utils/csvParser';
 import { validateDashboardData } from '../utils/uploadValidation';
 import {
@@ -16,6 +16,9 @@ export default function UploadScreen({ onDataLoaded }) {
   const { showToast } = useToast();
   const [loadedFiles, setLoadedFiles] = useState({});
   const [parsedData, setParsedData] = useState({});
+  const [exportHelpOpen, setExportHelpOpen] = useState(false);
+  const exportHelpTriggerRef = useRef(null);
+  const exportHelpPopoverRef = useRef(null);
 
   const onDrop = useCallback(async (acceptedFiles) => {
     const newLoaded = { ...loadedFiles };
@@ -84,6 +87,38 @@ export default function UploadScreen({ onDataLoaded }) {
     status: loadedFiles[definition.fileKey] || 'missing',
   }));
   const isReady = PRIMARY_FILE_KEYS.some(key => loadedFiles[key] === 'loaded');
+
+  const closeExportHelp = useCallback(() => {
+    setExportHelpOpen(false);
+    requestAnimationFrame(() => exportHelpTriggerRef.current?.focus());
+  }, []);
+
+  useEffect(() => {
+    if (!exportHelpOpen) return undefined;
+
+    requestAnimationFrame(() => exportHelpPopoverRef.current?.focus());
+
+    const handlePointerDown = event => {
+      if (
+        exportHelpPopoverRef.current?.contains(event.target)
+        || exportHelpTriggerRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setExportHelpOpen(false);
+    };
+
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') closeExportHelp();
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [closeExportHelp, exportHelpOpen]);
 
   const handleGenerate = async () => {
     if (!isReady) {
@@ -158,6 +193,52 @@ export default function UploadScreen({ onDataLoaded }) {
           {isDragActive ? 'Drop your CSV files here' : 'Drag & drop your CSV files here'}
         </p>
         <p className="text-sm text-slate-400 mt-1">or click to browse</p>
+
+        <div className="relative mt-6 border-t border-white/10 pt-5" onClick={event => event.stopPropagation()}>
+          <button
+            ref={exportHelpTriggerRef}
+            type="button"
+            onClick={() => setExportHelpOpen(open => !open)}
+            aria-expanded={exportHelpOpen}
+            aria-controls="oura-export-help-popover"
+            className="group inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-400 transition-colors hover:text-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          >
+            <Info className="h-4 w-4 text-cyan-400" strokeWidth={2.4} />
+            <span>Don&apos;t have your files yet?</span>
+          </button>
+
+          <AnimatePresence>
+            {exportHelpOpen && (
+              <motion.div
+                ref={exportHelpPopoverRef}
+                id="oura-export-help-popover"
+                role="dialog"
+                aria-label="Get your data from Oura"
+                tabIndex={-1}
+                initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                transition={{ duration: 0.16, ease: 'easeOut' }}
+                className="absolute left-1/2 top-full z-30 mt-3 w-[min(18rem,calc(100vw-4rem))] -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-900/95 p-5 text-left shadow-2xl shadow-black/40 backdrop-blur-xl focus-visible:outline-none"
+              >
+                <h2 className="font-outfit text-base font-semibold text-slate-100">Get your data from Oura</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                  Click the button below to request your data export from Oura.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => window.open('https://membership.ouraring.com/data-export', '_blank', 'noopener,noreferrer')}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-400/20 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                >
+                  Request Data Export
+                  <ExternalLink className="h-4 w-4" />
+                </button>
+                <p className="mt-3 text-xs text-slate-500">Opens the Oura website in a new tab.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         <div className="mt-4 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-medium text-amber-200">
           At least one exported file is required to generate the dashboard
         </div>
@@ -196,7 +277,10 @@ export default function UploadScreen({ onDataLoaded }) {
       >
         Generate Dashboard
       </button>
-      <p className="text-xs text-slate-500 mt-4">Your data never leaves your browser. All processing is done locally.</p>
+      <p className="mt-4 inline-flex items-center justify-center gap-2 text-xs text-slate-500">
+        <FileLock className="h-4 w-4 text-cyan-400" strokeWidth={2.4} />
+        <span>Your data never leaves your device. All processing is done locally.</span>
+      </p>
     </div>
   );
 }
