@@ -180,10 +180,12 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
   );
 }
 
-export default function BiometricsDetailModal({ appData, selectedDate, onClose }) {
+export default function BiometricsDetailModal({ appData, selectedDate, initialTarget = 'top', onClose }) {
   const [detailDate, setDetailDate] = useState(selectedDate);
   const [anchorDate, setAnchorDate] = useState(selectedDate);
-  const [drillMetric, setDrillMetric] = useState(null);
+  const [drillMetric, setDrillMetric] = useState(() => (
+    initialTarget.startsWith('metric:') ? initialTarget.slice('metric:'.length) : null
+  ));
   const availableDates = useMemo(
     () => getAvailableDatesAcrossDatasets([appData.spo2, appData.heartrate, appData.temperature]),
     [appData],

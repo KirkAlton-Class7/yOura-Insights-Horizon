@@ -20,7 +20,6 @@ import CardioCard from '../components/CardioCard';
 import CardioDetailModal from '../components/CardioDetailModal';
 import BiometricsCard from '../components/BiometricsCard';
 import BiometricsDetailModal from '../components/BiometricsDetailModal';
-import MetricDrilldownModal from '../components/MetricDrilldownModal';
 import BackgroundManager from '../components/BackgroundManager';
 import { buildDashboardSnapshot } from '../utils/snapshot';
 import { writeClipboardText } from '../utils/clipboard';
@@ -40,8 +39,7 @@ export default function OuraDashboard() {
   const [sleepDetailTarget, setSleepDetailTarget] = useState(null);
   const [activityDetailTarget, setActivityDetailTarget] = useState(null);
   const [isCardioDetailOpen, setIsCardioDetailOpen] = useState(false);
-  const [isBiometricsDetailOpen, setIsBiometricsDetailOpen] = useState(false);
-  const [biometricsMetricTarget, setBiometricsMetricTarget] = useState(null);
+  const [biometricsDetailTarget, setBiometricsDetailTarget] = useState(null);
   const [isWearCoverageOpen, setIsWearCoverageOpen] = useState(false);
   const [areWidgetsHidden, setAreWidgetsHidden] = useState(false);
   const {
@@ -131,8 +129,7 @@ export default function OuraDashboard() {
     setSleepDetailTarget(null);
     setActivityDetailTarget(null);
     setIsCardioDetailOpen(false);
-    setIsBiometricsDetailOpen(false);
-    setBiometricsMetricTarget(null);
+    setBiometricsDetailTarget(null);
     setIsWearCoverageOpen(false);
     setAreWidgetsHidden(false);
     setAppData({});
@@ -271,8 +268,8 @@ export default function OuraDashboard() {
                 spo2Data={spo2Data}
                 heartrateData={heartrateData}
                 temperatureData={temperatureData}
-                onOpenDetails={() => setIsBiometricsDetailOpen(true)}
-                onOpenMetric={setBiometricsMetricTarget}
+                onOpenDetails={() => setBiometricsDetailTarget('top')}
+                onOpenMetric={metricKey => setBiometricsDetailTarget(`metric:${metricKey}`)}
               />
             </section>
           </div>
@@ -318,19 +315,12 @@ export default function OuraDashboard() {
               onClose={() => setIsCardioDetailOpen(false)}
             />
           )}
-          {isBiometricsDetailOpen && (
+          {biometricsDetailTarget && (
             <BiometricsDetailModal
               appData={appData}
               selectedDate={selectedDate}
-              onClose={() => setIsBiometricsDetailOpen(false)}
-            />
-          )}
-          {biometricsMetricTarget && (
-            <MetricDrilldownModal
-              appData={appData}
-              metricKey={biometricsMetricTarget}
-              initialDate={selectedDate}
-              onClose={() => setBiometricsMetricTarget(null)}
+              initialTarget={biometricsDetailTarget}
+              onClose={() => setBiometricsDetailTarget(null)}
             />
           )}
           {isWearCoverageOpen && (
