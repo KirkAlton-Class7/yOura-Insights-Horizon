@@ -411,6 +411,7 @@ export default function ReadinessDetailModal({ appData, selectedDate, initialTar
   const [drillMetric, setDrillMetric] = useState(() => (
     initialTarget.startsWith('metric:') ? initialTarget.slice('metric:'.length) : null
   ));
+  const [drillMetricOpenedFromHome, setDrillMetricOpenedFromHome] = useState(initialTarget.startsWith('metric:'));
   const [detailDate, setDetailDate] = useState(selectedDate);
   const [periodStart, setPeriodStart] = useState(() => getReadinessPeriodStart(selectedDate));
   const availableReadinessDates = useMemo(
@@ -589,7 +590,11 @@ export default function ReadinessDetailModal({ appData, selectedDate, initialTar
             appData={appData}
             metricKey={drillMetric}
             initialDate={detailDate}
-            onClose={() => setDrillMetric(null)}
+            onClose={drillMetricOpenedFromHome ? onClose : () => setDrillMetric(null)}
+            onBack={() => {
+              setDrillMetricOpenedFromHome(false);
+              setDrillMetric(null);
+            }}
           />
         )}
       </AnimatePresence>

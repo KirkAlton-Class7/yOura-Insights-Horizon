@@ -9,6 +9,15 @@ import { SLEEP_STAGE_COLORS } from '../utils/sleepStageColors';
 import SleepStageBars from './SleepStageBars';
 
 const SLEEP_CONTRIBUTOR_KEYS = Object.freeze(['deep_sleep', 'rem_sleep', 'total_sleep', 'efficiency', 'restfulness', 'latency', 'timing']);
+const SLEEP_CONTRIBUTOR_TARGETS = Object.freeze({
+  deep_sleep: 'metric:deepSleepContributor',
+  rem_sleep: 'metric:remSleepContributor',
+  total_sleep: 'metric:totalSleepContributor',
+  efficiency: 'metric:efficiencyContributor',
+  restfulness: 'metric:restfulnessContributor',
+  latency: 'metric:latencyContributor',
+  timing: 'metric:timingContributor',
+});
 
 const formatSeconds = (secs) => {
   if (!secs) return '0m';
@@ -177,7 +186,7 @@ export default function SleepCard({
                   key={key}
                   label={key.replace(/_/g, ' ')}
                   value={contributors?.[key]}
-                  onOpen={event => openTarget(event, `metric:${key === 'deep_sleep' ? 'deepSleepContributor' : key === 'rem_sleep' ? 'remSleepContributor' : key === 'total_sleep' ? 'totalSleepContributor' : key === 'efficiency' ? 'efficiencyContributor' : key === 'restfulness' ? 'restfulnessContributor' : key === 'latency' ? 'latencyContributor' : 'timingContributor'}`)}
+                  onOpen={event => openTarget(event, SLEEP_CONTRIBUTOR_TARGETS[key])}
                 />
               ))}
             </div>
