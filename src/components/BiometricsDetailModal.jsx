@@ -52,6 +52,7 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
   const baseline = 252;
   const circleTop = 86;
   const circleBottom = 176;
+  const disturbanceCircleRadius = 16;
   const slotWidth = width / history.length;
   const oxygenValues = history.map(day => day.bloodOxygen).filter(value => value !== null);
   const disturbanceValues = history.map(day => day.breathingDisturbance).filter(value => value !== null);
@@ -64,10 +65,38 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
   const selected = calendarDates.getDatePresentation(selectedDate);
   const swipe = useSwipePaging({ canPrevious, canNext, onPrevious, onNext });
 
-  const linePoints = history
-    .map((day, index) => day.breathingDisturbance === null ? null : ({
+  const chartPoints = history.map((day, index) => {
+    const barHeight = barHeightFor(day.bloodOxygen);
+    const barTop = baseline - barHeight;
+    const baseCircleY = day.breathingDisturbance === null
+      ? null
+      : disturbanceYFor(day.breathingDisturbance);
+    const circleOverlapsBar = day.bloodOxygen !== null
+      && baseCircleY !== null
+      && baseCircleY + disturbanceCircleRadius > barTop
+      && baseCircleY - disturbanceCircleRadius < baseline;
+    const circleY = circleOverlapsBar
+      ? Math.max(30, barTop - disturbanceCircleRadius - 8)
+      : baseCircleY;
+    const oxygenLabelY = avoidCircleLabelCollision(
+      barTop - 10,
+      circleY,
+      { minimum: 28, maximum: baseline - 14, clearance: 38 },
+    );
+
+    return {
       x: slotWidth * index + slotWidth / 2,
-      y: disturbanceYFor(day.breathingDisturbance),
+      barHeight,
+      barTop,
+      circleY,
+      oxygenLabelY,
+    };
+  });
+
+  const linePoints = chartPoints
+    .map(point => point.circleY === null ? null : ({
+      x: point.x,
+      y: point.circleY,
     }))
     .filter(Boolean);
 
@@ -97,14 +126,9 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
             {history.map((day, index) => {
               const x = slotWidth * index + slotWidth * 0.18;
               const barWidth = slotWidth * 0.64;
-              const barHeight = barHeightFor(day.bloodOxygen);
               const centerX = slotWidth * index + slotWidth / 2;
-              const circleY = day.breathingDisturbance === null ? null : disturbanceYFor(day.breathingDisturbance);
-              const oxygenLabelY = avoidCircleLabelCollision(
-                baseline - barHeight - 10,
-                circleY,
-                { minimum: 28, maximum: baseline - 14 },
-              );
+              const point = chartPoints[index];
+              const barHeight = point.barHeight;
               const date = calendarDates.getDatePresentation(day.date);
               const active = day.date === selectedDate;
               const available = day.bloodOxygen !== null || day.breathingDisturbance !== null;
@@ -141,7 +165,7 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
                     strokeWidth="3"
                   />
                   {day.bloodOxygen !== null && (
-                    <text x={centerX} y={oxygenLabelY} textAnchor="middle" fill="rgba(226,232,240,0.9)" fontSize="17" fontWeight="700">
+                    <text x={centerX} y={point.oxygenLabelY} textAnchor="middle" fill="rgba(226,232,240,0.9)" fontSize="17" fontWeight="700">
                       {day.bloodOxygen.toFixed(1)}
                     </text>
                   )}
@@ -153,15 +177,15 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
             {linePoints.length > 1 && <path d={smoothPath(linePoints)} fill="none" stroke="rgba(226,232,240,0.58)" strokeWidth="4" strokeDasharray="9 8" strokeLinejoin="round" strokeLinecap="round" pointerEvents="none" />}
             {history.map((day, index) => day.breathingDisturbance === null ? null : (
               <g key={`${day.date}-disturbance`} pointerEvents="none">
-                <circle cx={slotWidth * index + slotWidth / 2} cy={disturbanceYFor(day.breathingDisturbance)} r="16" fill="#e2e8f0" stroke={day.date === selectedDate ? '#67e8f9' : '#cbd5e1'} strokeWidth="4" />
-                <text x={slotWidth * index + slotWidth / 2} y={disturbanceYFor(day.breathingDisturbance) + 5} textAnchor="middle" fill="#0f172a" fontSize="14" fontWeight="800">{Math.round(day.breathingDisturbance)}</text>
+                <circle cx={slotWidth * index + slotWidth / 2} cy={chartPoints[index].circleY} r={disturbanceCircleRadius} fill="#e2e8f0" stroke={day.date === selectedDate ? '#67e8f9' : '#cbd5e1'} strokeWidth="4" />
+                <text x={slotWidth * index + slotWidth / 2} y={chartPoints[index].circleY + 5} textAnchor="middle" fill="#0f172a" fontSize="14" fontWeight="800">{Math.round(day.breathingDisturbance)}</text>
               </g>
             ))}
             {history.map((day, index) => day.date === labelState.activeKey ? (
               <SvgChartPointLabel
                 key={`label-${day.date}`}
                 x={slotWidth * index + slotWidth / 2}
-                y={day.breathingDisturbance === null ? baseline - barHeightFor(day.bloodOxygen) : disturbanceYFor(day.breathingDisturbance)}
+                y={chartPoints[index].circleY === null ? chartPoints[index].barTop : chartPoints[index].circleY}
                 label={formatChartPointLabel(day.date)}
                 chartWidth={width}
                 chartHeight={height}
