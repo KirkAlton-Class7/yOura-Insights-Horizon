@@ -10,7 +10,7 @@ import { getBiometricsHistory } from '../utils/biometricsDetails';
 import { calendarDates } from '../utils/dateService';
 import { getAvailableDatesAcrossDatasets, getAvailableRecordDates } from '../utils/dataAvailability';
 import { getBloodOxygenColor, SEMANTIC_COLORS } from '../utils/colors';
-import { avoidCircleLabelCollision } from '../utils/chartGeometry';
+import { avoidCircleLabelCollision, placeCircleOnBarWhenTallEnough } from '../utils/chartGeometry';
 
 const displayNumber = (value, decimals = 0) => {
   const number = Number(value);
@@ -71,12 +71,8 @@ function BiometricsHistory({ history, selectedDate, onSelectDate, onPrevious, on
     const baseCircleY = day.breathingDisturbance === null
       ? null
       : disturbanceYFor(day.breathingDisturbance);
-    const circleOverlapsBar = day.bloodOxygen !== null
-      && baseCircleY !== null
-      && baseCircleY + disturbanceCircleRadius > barTop
-      && baseCircleY - disturbanceCircleRadius < baseline;
-    const circleY = circleOverlapsBar
-      ? Math.max(30, barTop - disturbanceCircleRadius - 8)
+    const circleY = day.bloodOxygen !== null && baseCircleY !== null
+      ? placeCircleOnBarWhenTallEnough(barTop, barHeight, disturbanceCircleRadius, { minimum: 30 })
       : baseCircleY;
     const oxygenLabelY = avoidCircleLabelCollision(
       barTop - 10,
