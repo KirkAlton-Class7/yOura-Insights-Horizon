@@ -358,8 +358,8 @@ export default function SleepDebtDetailModal({ appData, selectedDate, onClose, o
         </motion.div>
       </motion.div>
 
-      <AnimatePresence>{infoTopic && <SleepInfoModal topic={infoTopic} onClose={() => setInfoTopic(null)} />}</AnimatePresence>
-      <AnimatePresence>{showTotalSleepTrend && <MetricDrilldownModal appData={appData} metricKey="totalSleep" initialDate={anchorDate} onClose={() => setShowTotalSleepTrend(false)} />}</AnimatePresence>
+      <AnimatePresence>{infoTopic && <SleepInfoModal topic={infoTopic} onClose={onClose} onBack={() => setInfoTopic(null)} />}</AnimatePresence>
+      <AnimatePresence>{showTotalSleepTrend && <MetricDrilldownModal appData={appData} metricKey="totalSleep" initialDate={anchorDate} onClose={onClose} onBack={() => setShowTotalSleepTrend(false)} />}</AnimatePresence>
     </>
   );
 }

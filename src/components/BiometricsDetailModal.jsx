@@ -211,6 +211,11 @@ export default function BiometricsDetailModal({ appData, selectedDate, onClose }
     setAnchorDate(date);
   };
 
+  const closeStack = () => {
+    setDrillMetric(null);
+    onClose();
+  };
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -246,7 +251,7 @@ export default function BiometricsDetailModal({ appData, selectedDate, onClose }
           </div>
         </motion.div>
       </motion.div>
-      <AnimatePresence>{drillMetric && <MetricDrilldownModal appData={appData} metricKey={drillMetric} initialDate={detailDate} onClose={() => setDrillMetric(null)} />}</AnimatePresence>
+      <AnimatePresence>{drillMetric && <MetricDrilldownModal appData={appData} metricKey={drillMetric} initialDate={detailDate} onClose={closeStack} onBack={() => setDrillMetric(null)} />}</AnimatePresence>
     </>
   );
 }

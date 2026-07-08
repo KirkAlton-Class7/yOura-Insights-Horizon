@@ -363,7 +363,7 @@ export default function SleepRegularityDetailModal({ appData, selectedDate, onCl
           </div>
         </motion.div>
       </motion.div>
-      <AnimatePresence>{showInfo && <SleepInfoModal topic="regularity" onClose={() => setShowInfo(false)} />}</AnimatePresence>
+      <AnimatePresence>{showInfo && <SleepInfoModal topic="regularity" onClose={onClose} onBack={() => setShowInfo(false)} />}</AnimatePresence>
     </>
   );
 }

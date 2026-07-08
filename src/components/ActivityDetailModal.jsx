@@ -275,7 +275,6 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
   const [isBenefitsDrilldownOpen, setIsBenefitsDrilldownOpen] = useState(initialTarget === 'benefits');
   const [isZoneDrilldownOpen, setIsZoneDrilldownOpen] = useState(initialTarget === 'zones');
   const [isIntensityDrilldownOpen, setIsIntensityDrilldownOpen] = useState(initialTarget === 'intensity');
-  const [nestedOpenedFromHome, setNestedOpenedFromHome] = useState(initialTarget !== 'top');
   const [selectedMovementHour, setSelectedMovementHour] = useState(0);
   const availableDates = useMemo(() => getAvailableRecordDates(appData.activity), [appData.activity]);
   const activity = appData.activity?.[detailDate]?.[0] || null;
@@ -284,6 +283,16 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
   const activityTime = getActivityTimeSeconds(activity);
   const weekly = useMemo(() => getWeeklyActivityBenefits(appData, detailDate), [appData, detailDate]);
   const presentation = calendarDates.getDatePresentation(detailDate);
+
+  const closeStack = () => {
+    setDrillMetric(null);
+    setInfoTopic(null);
+    setMovementDrilldownMode(null);
+    setIsBenefitsDrilldownOpen(false);
+    setIsZoneDrilldownOpen(false);
+    setIsIntensityDrilldownOpen(false);
+    onClose();
+  };
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -381,12 +390,12 @@ export default function ActivityDetailModal({ appData, selectedDate, initialTarg
           </div>
         </motion.div>
       </motion.div>
-      <AnimatePresence>{infoTopic && <ActivityInfoModal topic={infoTopic} onClose={nestedOpenedFromHome ? onClose : () => setInfoTopic(null)} onBack={() => { setNestedOpenedFromHome(false); setInfoTopic(null); }} />}</AnimatePresence>
-      <AnimatePresence>{drillMetric && <MetricDrilldownModal appData={appData} metricKey={drillMetric} initialDate={detailDate} onClose={nestedOpenedFromHome ? onClose : () => setDrillMetric(null)} onBack={() => { setNestedOpenedFromHome(false); setDrillMetric(null); }} />}</AnimatePresence>
-      <AnimatePresence>{movementDrilldownMode && <ActivityMovementDrilldownModal appData={appData} initialDate={detailDate} initialMode={movementDrilldownMode} onClose={nestedOpenedFromHome ? onClose : () => setMovementDrilldownMode(null)} onBack={() => { setNestedOpenedFromHome(false); setMovementDrilldownMode(null); }} />}</AnimatePresence>
-      <AnimatePresence>{isBenefitsDrilldownOpen && <ActivityBenefitsDrilldownModal appData={appData} initialDate={detailDate} onClose={nestedOpenedFromHome ? onClose : () => setIsBenefitsDrilldownOpen(false)} onBack={() => { setNestedOpenedFromHome(false); setIsBenefitsDrilldownOpen(false); }} />}</AnimatePresence>
-      <AnimatePresence>{isZoneDrilldownOpen && <ActivityZoneDrilldownModal appData={appData} initialDate={detailDate} onClose={nestedOpenedFromHome ? onClose : () => setIsZoneDrilldownOpen(false)} onBack={() => { setNestedOpenedFromHome(false); setIsZoneDrilldownOpen(false); }} />}</AnimatePresence>
-      <AnimatePresence>{isIntensityDrilldownOpen && <ActivityIntensityDrilldownModal appData={appData} initialDate={detailDate} onClose={nestedOpenedFromHome ? onClose : () => setIsIntensityDrilldownOpen(false)} onBack={() => { setNestedOpenedFromHome(false); setIsIntensityDrilldownOpen(false); }} />}</AnimatePresence>
+      <AnimatePresence>{infoTopic && <ActivityInfoModal topic={infoTopic} onClose={closeStack} onBack={() => setInfoTopic(null)} />}</AnimatePresence>
+      <AnimatePresence>{drillMetric && <MetricDrilldownModal appData={appData} metricKey={drillMetric} initialDate={detailDate} onClose={closeStack} onBack={() => setDrillMetric(null)} />}</AnimatePresence>
+      <AnimatePresence>{movementDrilldownMode && <ActivityMovementDrilldownModal appData={appData} initialDate={detailDate} initialMode={movementDrilldownMode} onClose={closeStack} onBack={() => setMovementDrilldownMode(null)} />}</AnimatePresence>
+      <AnimatePresence>{isBenefitsDrilldownOpen && <ActivityBenefitsDrilldownModal appData={appData} initialDate={detailDate} onClose={closeStack} onBack={() => setIsBenefitsDrilldownOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{isZoneDrilldownOpen && <ActivityZoneDrilldownModal appData={appData} initialDate={detailDate} onClose={closeStack} onBack={() => setIsZoneDrilldownOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{isIntensityDrilldownOpen && <ActivityIntensityDrilldownModal appData={appData} initialDate={detailDate} onClose={closeStack} onBack={() => setIsIntensityDrilldownOpen(false)} />}</AnimatePresence>
     </>
   );
 }

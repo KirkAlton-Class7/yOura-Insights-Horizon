@@ -411,7 +411,6 @@ export default function ReadinessDetailModal({ appData, selectedDate, initialTar
   const [drillMetric, setDrillMetric] = useState(() => (
     initialTarget.startsWith('metric:') ? initialTarget.slice('metric:'.length) : null
   ));
-  const [drillMetricOpenedFromHome, setDrillMetricOpenedFromHome] = useState(initialTarget.startsWith('metric:'));
   const [detailDate, setDetailDate] = useState(selectedDate);
   const [periodStart, setPeriodStart] = useState(() => getReadinessPeriodStart(selectedDate));
   const availableReadinessDates = useMemo(
@@ -449,6 +448,11 @@ export default function ReadinessDetailModal({ appData, selectedDate, initialTar
       : availableInPeriod[0] || preferredDate;
     setPeriodStart(nextStart);
     setDetailDate(nextDate);
+  };
+
+  const closeStack = () => {
+    setDrillMetric(null);
+    onClose();
   };
 
   useEffect(() => {
@@ -590,9 +594,8 @@ export default function ReadinessDetailModal({ appData, selectedDate, initialTar
             appData={appData}
             metricKey={drillMetric}
             initialDate={detailDate}
-            onClose={drillMetricOpenedFromHome ? onClose : () => setDrillMetric(null)}
+            onClose={closeStack}
             onBack={() => {
-              setDrillMetricOpenedFromHome(false);
               setDrillMetric(null);
             }}
           />

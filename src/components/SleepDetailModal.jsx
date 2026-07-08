@@ -271,7 +271,6 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
   const [isSleepDebtOpen, setIsSleepDebtOpen] = useState(initialTarget === 'debt');
   const [isSleepRegularityOpen, setIsSleepRegularityOpen] = useState(initialTarget === 'regularity');
   const [isSleepStagesOpen, setIsSleepStagesOpen] = useState(initialTarget === 'stages');
-  const [nestedOpenedFromHome, setNestedOpenedFromHome] = useState(initialTarget !== 'top');
   const availableSleepDates = useMemo(() => getAvailableDatesAcrossDatasets(
     ['sleep', 'sleepmodel', 'spo2', 'sleeptime'].map(key => appData[key]),
   ), [appData]);
@@ -296,6 +295,15 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
   const breathingStatus = getNighttimeBreathingStatus(spo2);
   const contributors = sleep?.contributors || {};
   const datePresentation = calendarDates.getDatePresentation(detailDate);
+
+  const closeStack = () => {
+    setInfoTopic(null);
+    setDrillMetric(null);
+    setIsSleepDebtOpen(false);
+    setIsSleepRegularityOpen(false);
+    setIsSleepStagesOpen(false);
+    onClose();
+  };
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -427,11 +435,11 @@ export default function SleepDetailModal({ appData, selectedDate, initialTarget 
         </motion.div>
       </motion.div>
 
-      <AnimatePresence>{infoTopic && <SleepInfoModal topic={infoTopic} onClose={nestedOpenedFromHome ? onClose : () => setInfoTopic(null)} onBack={() => { setNestedOpenedFromHome(false); setInfoTopic(null); }} />}</AnimatePresence>
-      <AnimatePresence>{drillMetric && <MetricDrilldownModal appData={appData} metricKey={drillMetric} initialDate={detailDate} onClose={nestedOpenedFromHome ? onClose : () => setDrillMetric(null)} onBack={() => { setNestedOpenedFromHome(false); setDrillMetric(null); }} />}</AnimatePresence>
-      <AnimatePresence>{isSleepDebtOpen && <SleepDebtDetailModal appData={appData} selectedDate={detailDate} onClose={nestedOpenedFromHome ? onClose : () => setIsSleepDebtOpen(false)} onBack={() => { setNestedOpenedFromHome(false); setIsSleepDebtOpen(false); }} />}</AnimatePresence>
-      <AnimatePresence>{isSleepRegularityOpen && <SleepRegularityDetailModal appData={appData} selectedDate={detailDate} onClose={nestedOpenedFromHome ? onClose : () => setIsSleepRegularityOpen(false)} onBack={() => { setNestedOpenedFromHome(false); setIsSleepRegularityOpen(false); }} />}</AnimatePresence>
-      <AnimatePresence>{isSleepStagesOpen && <SleepStagesTrendModal appData={appData} initialDate={detailDate} onClose={nestedOpenedFromHome ? onClose : () => setIsSleepStagesOpen(false)} onBack={() => { setNestedOpenedFromHome(false); setIsSleepStagesOpen(false); }} />}</AnimatePresence>
+      <AnimatePresence>{infoTopic && <SleepInfoModal topic={infoTopic} onClose={closeStack} onBack={() => setInfoTopic(null)} />}</AnimatePresence>
+      <AnimatePresence>{drillMetric && <MetricDrilldownModal appData={appData} metricKey={drillMetric} initialDate={detailDate} onClose={closeStack} onBack={() => setDrillMetric(null)} />}</AnimatePresence>
+      <AnimatePresence>{isSleepDebtOpen && <SleepDebtDetailModal appData={appData} selectedDate={detailDate} onClose={closeStack} onBack={() => setIsSleepDebtOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{isSleepRegularityOpen && <SleepRegularityDetailModal appData={appData} selectedDate={detailDate} onClose={closeStack} onBack={() => setIsSleepRegularityOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{isSleepStagesOpen && <SleepStagesTrendModal appData={appData} initialDate={detailDate} onClose={closeStack} onBack={() => setIsSleepStagesOpen(false)} />}</AnimatePresence>
     </>
   );
 }
