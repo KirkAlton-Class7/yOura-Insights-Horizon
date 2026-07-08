@@ -26,22 +26,26 @@ export default function Header({
 
   return (
     <motion.header
-      ref={scrollRef}
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 100 }}
-      onScroll={clampHorizontalScroll}
-      onTouchEnd={clampHorizontalScroll}
-      className="sticky top-0 z-30 max-w-full touch-pan-x overflow-x-auto overscroll-x-contain border-b border-white/10 bg-slate-950/95 shadow-md scrollbar-hide xl:overflow-x-hidden"
+      className="sticky top-0 z-30 max-w-full overflow-hidden border-b border-white/10 bg-slate-950/95 shadow-md"
     >
-      <div className="relative w-max min-w-full">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden">
         <motion.div
-          className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"
+          className="h-full w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"
           animate={{ x: ['-100%', '100%'] }}
           transition={{ duration: 3, repeat: Infinity, repeatDelay: 26, ease: 'linear' }}
         />
+      </div>
 
-        <div className="flex items-center gap-6 py-3 pl-20 pr-4 lg:py-4 xl:justify-between xl:px-6">
+      <div
+        ref={scrollRef}
+        onScroll={clampHorizontalScroll}
+        onTouchEnd={clampHorizontalScroll}
+        className="max-w-full touch-pan-x overflow-x-auto overscroll-x-contain scrollbar-hide xl:overflow-x-hidden"
+      >
+        <div className="flex w-max min-w-full items-center gap-6 py-3 pl-20 pr-4 lg:py-4 xl:justify-between xl:px-6">
           <div className="flex flex-shrink-0 items-center gap-3">
             <div className="flex items-center gap-2">
               <svg width="22" height="22" viewBox="0 0 80 80" fill="none">
