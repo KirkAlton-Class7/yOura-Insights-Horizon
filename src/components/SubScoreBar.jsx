@@ -31,7 +31,7 @@ export default function SubScoreBar({ label, value, onOpen }) {
     <button
       type="button"
       onClick={onOpen}
-      className="relative w-full rounded-xl p-2 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+      className="relative z-20 w-full rounded-xl p-2 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
       aria-label={`Open ${label} trends`}
     >
       {content}
