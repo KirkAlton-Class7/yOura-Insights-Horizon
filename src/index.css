@@ -101,6 +101,18 @@ body[data-background-mode="horizon"] [role="dialog"] :is(section, div, button)[c
 }
 
 /* Utility animations */
+
+@keyframes readyDotPulse {
+  0% { opacity: 1; }
+  20% { opacity: 0.5; }
+  80% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.ready-dot-pulse {
+  animation: readyDotPulse 5s cubic-bezier(0.4, 0, 0.6, 1) 5s infinite;
+}
+
 .animate-fade-up {
   animation: fadeUp 0.4s ease forwards;
 }

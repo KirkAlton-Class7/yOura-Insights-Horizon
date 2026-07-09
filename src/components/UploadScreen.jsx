@@ -19,6 +19,7 @@ export default function UploadScreen({ onDataLoaded }) {
   const [exportHelpOpen, setExportHelpOpen] = useState(false);
   const exportHelpTriggerRef = useRef(null);
   const exportHelpPopoverRef = useRef(null);
+  const exportHelpWrapperRef = useRef(null);
 
   const onDrop = useCallback(async (acceptedFiles) => {
     const newLoaded = { ...loadedFiles };
@@ -96,15 +97,8 @@ export default function UploadScreen({ onDataLoaded }) {
   useEffect(() => {
     if (!exportHelpOpen) return undefined;
 
-    requestAnimationFrame(() => exportHelpPopoverRef.current?.focus());
-
     const handlePointerDown = event => {
-      if (
-        exportHelpPopoverRef.current?.contains(event.target)
-        || exportHelpTriggerRef.current?.contains(event.target)
-      ) {
-        return;
-      }
+      if (exportHelpWrapperRef.current?.contains(event.target)) return;
       setExportHelpOpen(false);
     };
 
@@ -194,11 +188,21 @@ export default function UploadScreen({ onDataLoaded }) {
         </p>
         <p className="text-sm text-slate-400 mt-1">or click to browse</p>
 
-        <div className="relative mt-6 border-t border-white/10 pt-5" onClick={event => event.stopPropagation()}>
+        <div
+          ref={exportHelpWrapperRef}
+          className="relative mt-6 border-t border-white/10 pt-5"
+          onClick={event => event.stopPropagation()}
+          onMouseEnter={() => setExportHelpOpen(true)}
+          onMouseLeave={() => setExportHelpOpen(false)}
+          onFocus={() => setExportHelpOpen(true)}
+          onBlur={event => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setExportHelpOpen(false);
+          }}
+        >
           <button
             ref={exportHelpTriggerRef}
             type="button"
-            onClick={() => setExportHelpOpen(open => !open)}
+            onClick={() => setExportHelpOpen(true)}
             aria-expanded={exportHelpOpen}
             aria-controls="oura-export-help-popover"
             className="group inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-400 transition-colors hover:text-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
@@ -214,33 +218,36 @@ export default function UploadScreen({ onDataLoaded }) {
                 id="oura-export-help-popover"
                 role="dialog"
                 aria-label="Get your data from Oura"
-                tabIndex={-1}
                 initial={{ opacity: 0, y: 8, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.97 }}
                 transition={{ duration: 0.16, ease: 'easeOut' }}
-                className="absolute left-1/2 top-full z-30 mt-3 w-[min(18rem,calc(100vw-4rem))] -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-900/95 p-5 text-left shadow-2xl shadow-black/40 backdrop-blur-xl focus-visible:outline-none"
+                className="absolute left-1/2 top-full z-30 mt-3 w-[min(18rem,calc(100vw-4rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-600 bg-slate-900 text-left shadow-2xl shadow-black/60 ring-1 ring-white/10"
               >
-                <h2 className="font-outfit text-base font-semibold text-slate-100">Get your data from Oura</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
-                  Click the button below to request your data export from Oura.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => window.open('https://membership.ouraring.com/data-export', '_blank', 'noopener,noreferrer')}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-400/20 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-                >
-                  Request Data Export
-                  <ExternalLink className="h-4 w-4" />
-                </button>
-                <p className="mt-3 text-xs text-slate-500">Opens the Oura website in a new tab.</p>
+                <div className="border-b border-slate-600/40 bg-slate-800 px-5 py-4">
+                  <h2 className="font-outfit text-base font-semibold text-slate-100">Get your data from Oura</h2>
+                </div>
+                <div className="bg-slate-900 px-5 py-4 [background-image:radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(17,24,39,0.98))]">
+                  <p className="text-sm leading-6 text-slate-300">
+                    No subscription required. It&apos;s free to request a data export from Oura.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => window.open('https://membership.ouraring.com/data-export', '_blank', 'noopener,noreferrer')}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-400/20 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                  >
+                    Request Data Export
+                    <ExternalLink className="h-4 w-4" />
+                  </button>
+                  <p className="mt-3 text-xs text-slate-500">Opens the Oura website in a new tab.</p>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
         <div className="mt-4 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-medium text-amber-200">
-          At least one exported file is required to generate the dashboard
+          At least one primary file is required to generate the dashboard
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-6 text-left">
@@ -255,11 +262,23 @@ export default function UploadScreen({ onDataLoaded }) {
                     : 'bg-white/5 text-slate-400'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${
-                status === 'loaded' ? 'bg-cyan-400' : status === 'empty' ? 'bg-amber-400' : 'bg-slate-600'
+              <span className={`h-2 w-2 rounded-full ${
+                status === 'loaded'
+                  ? 'ready-dot-pulse bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)] ring-2 ring-emerald-400/25'
+                  : status === 'empty'
+                    ? 'bg-amber-400'
+                    : 'bg-slate-600'
               }`} />
               <span className="min-w-0 flex-1 truncate">{label}</span>
-              <span className="text-[10px] uppercase tracking-wide opacity-70">
+              <span
+                className={`text-[10px] uppercase tracking-wide ${
+                  status === 'loaded'
+                    ? 'text-emerald-400'
+                    : status === 'empty' || primary
+                      ? 'text-amber-200'
+                      : 'text-slate-400/70'
+                }`}
+              >
                 {status === 'loaded' ? 'Ready' : status === 'empty' ? 'No data' : primary ? 'Primary' : 'Optional'}
               </span>
             </div>
