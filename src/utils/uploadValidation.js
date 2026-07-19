@@ -72,8 +72,8 @@ const DATASET_RULES = {
     ['optimal bedtime', row => (
       isMissing(row.optimal_bedtime)
       || (isPlainObject(row.optimal_bedtime)
-        && isOptionalNumberInRange(row.optimal_bedtime.start_offset, 0, 172800)
-        && isOptionalNumberInRange(row.optimal_bedtime.end_offset, 0, 172800))
+        && isOptionalNumberInRange(row.optimal_bedtime.start_offset, -172800, 172800)
+        && isOptionalNumberInRange(row.optimal_bedtime.end_offset, -172800, 172800))
     )],
   ],
   stress: [
