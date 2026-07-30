@@ -11,7 +11,7 @@ export const READINESS_DRILLDOWN_METRICS = Object.freeze({
     precision: 0,
     axisStep: 5,
     source: 'sleepmodel',
-    value: record => record?.resting_heart_rate ?? record?.lowest_heart_rate,
+    value: record => Number(record?.resting_heart_rate ?? record?.lowest_heart_rate) > 0 ? (record?.resting_heart_rate ?? record?.lowest_heart_rate) : null,
   }),
   averageHrv: Object.freeze({
     key: 'averageHrv',
@@ -20,7 +20,7 @@ export const READINESS_DRILLDOWN_METRICS = Object.freeze({
     precision: 0,
     axisStep: 10,
     source: 'sleepmodel',
-    value: record => record?.average_hrv,
+    value: record => Number(record?.average_hrv) > 0 ? record?.average_hrv : null,
   }),
   averageHeartRate: Object.freeze({
     key: 'averageHeartRate',
@@ -29,7 +29,7 @@ export const READINESS_DRILLDOWN_METRICS = Object.freeze({
     precision: 0,
     axisStep: 5,
     source: 'sleepmodel',
-    value: record => record?.average_heart_rate,
+    value: record => Number(record?.average_heart_rate) > 0 ? record?.average_heart_rate : null,
   }),
   lowestHeartRate: Object.freeze({
     key: 'lowestHeartRate',
@@ -38,7 +38,7 @@ export const READINESS_DRILLDOWN_METRICS = Object.freeze({
     precision: 0,
     axisStep: 5,
     source: 'sleepmodel',
-    value: record => record?.lowest_heart_rate,
+    value: record => Number(record?.lowest_heart_rate) > 0 ? record?.lowest_heart_rate : null,
   }),
   bodyTemperature: Object.freeze({
     key: 'bodyTemperature',

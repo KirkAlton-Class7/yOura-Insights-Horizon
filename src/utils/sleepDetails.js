@@ -12,6 +12,11 @@ const finiteNumber = value => {
   return Number.isFinite(number) ? number : null;
 };
 
+const positiveNumber = value => {
+  const number = finiteNumber(value);
+  return number > 0 ? number : null;
+};
+
 export const formatSleepDuration = seconds => {
   const totalMinutes = Math.max(0, Math.round(Number(seconds || 0) / 60));
   const hours = Math.floor(totalMinutes / 60);
@@ -57,9 +62,9 @@ export function getSleepStageSummary(record) {
     totalSleep,
     timeInBed,
     efficiency: finiteNumber(record.efficiency),
-    restingHeartRate: finiteNumber(record.resting_heart_rate ?? record.lowest_heart_rate),
-    lowestHeartRate: finiteNumber(record.lowest_heart_rate),
-    averageHeartRate: finiteNumber(record.average_heart_rate),
+    restingHeartRate: positiveNumber(record.resting_heart_rate ?? record.lowest_heart_rate),
+    lowestHeartRate: positiveNumber(record.lowest_heart_rate),
+    averageHeartRate: positiveNumber(record.average_heart_rate),
     restlessPeriods: finiteNumber(record.restless_periods),
     phases: Object.freeze(phases),
     stages: Object.freeze([

@@ -24,11 +24,15 @@ export default function UploadScreen({ onDataLoaded }) {
   const onDrop = useCallback(async (acceptedFiles) => {
     const newLoaded = { ...loadedFiles };
     const nextData = { ...parsedData };
+    const unsupportedFiles = [];
 
     for (const file of acceptedFiles) {
       const baseName = file.name.replace(/\.csv$/i, '').replace(/[^a-z0-9]/gi, '').toLowerCase();
-      const key = Object.keys(FILE_MAP).find(k => baseName.includes(k));
-      if (!key) continue;
+      const key = FILE_MAP[baseName] ? baseName : null;
+      if (!key) {
+        unsupportedFiles.push(file.name);
+        continue;
+      }
 
       try {
         const text = await file.text();
@@ -70,6 +74,16 @@ export default function UploadScreen({ onDataLoaded }) {
           type: 'error',
         });
       }
+    }
+
+    if (unsupportedFiles.length > 0) {
+      const preview = unsupportedFiles.slice(0, 4).join(', ');
+      const remaining = unsupportedFiles.length > 4 ? `, and ${unsupportedFiles.length - 4} more` : '';
+      showToast({
+        title: 'Unsupported Files Skipped',
+        message: `Skipped ${unsupportedFiles.length} CSV file${unsupportedFiles.length === 1 ? '' : 's'} that are not used by this dashboard yet: ${preview}${remaining}.`,
+        type: 'warning',
+      });
     }
 
     setLoadedFiles(newLoaded);

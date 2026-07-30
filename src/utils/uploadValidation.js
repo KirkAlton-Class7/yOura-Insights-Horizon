@@ -98,7 +98,7 @@ const DATASET_RULES = {
     ['REM-sleep duration', row => isOptionalNumberInRange(row.rem_sleep_duration, 0, 86400)],
     ['light-sleep duration', row => isOptionalNumberInRange(row.light_sleep_duration, 0, 86400)],
     ['time in bed', row => isOptionalNumberInRange(row.time_in_bed, 0, 86400)],
-    ['average heart rate', row => isOptionalNumberInRange(row.average_heart_rate, 20, 250)],
+    ['average heart rate', row => isMissing(row.average_heart_rate) || Number(row.average_heart_rate) === 0 || isNumberInRange(row.average_heart_rate, 20, 250)],
     ['average HRV', row => isOptionalNumberInRange(row.average_hrv, 0, 500)],
     ['bedtime start', row => isMissing(row.bedtime_start) || isTimestamp(row.bedtime_start)],
     ['bedtime end', row => isMissing(row.bedtime_end) || isTimestamp(row.bedtime_end)],
